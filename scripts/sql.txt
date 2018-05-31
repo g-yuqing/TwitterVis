@@ -1,0 +1,64 @@
+SELECT
+  DATE(created_at) as date,
+  user.id AS user,
+  retweeted_status.user.id AS influencer
+FROM
+  [vizlab-crest:postcrisis_PQX.tweets]
+WHERE
+  MONTH(DATE(created_at)) = 3 and
+  retweeted_status.user.id IS NOT NULL
+
+
+
+
+SELECT
+  B.date, B.user, B.influencer, A.words
+FROM
+  `vizlab-crest.postcrisis_PQX.words_noun` AS A, `vizlab-crest.guanyq.March_ID` AS B
+WHERE
+  A.tweet_id = B.id
+
+
+ when export table my bucket = guanyq
+
+
+
+ SELECT
+   DATE(created_at), user.id, text
+ FROM
+   [vizlab-crest:postcrisis_PQX.tweets]
+ WHERE
+   (
+   MONTH(DATE(created_at))=3 and YEAR(DATE(created_at))=2011 and
+   (user.id=256401886 or user.id=266493890 or user.id=101176314 or user.id=146272921 or user.id=264846579 or user.id=266487261 or user.id=109278257 or user.id=74457071 or user.id=120421476 or user.id=266482908 or user.id=112129911 or user.id=127997944 or user.id=58390193)
+   )
+   or
+   (
+   MONTH(DATE(created_at))=3 and YEAR(DATE(created_at))=2012 and
+   (user.id=90540453 or user.id=96304148 or user.id=13006812 or user.id=102388128 or user.id=17616108 or user.id=96828010 or user.id=112129911 or user.id=277963014 or user.id=200622686 or user.id=136940430 or user.id=307148796 or user.id=267176192 or user.id=120421476)
+   )
+   or
+   (
+   MONTH(DATE(created_at))=3 and YEAR(DATE(created_at))=2013 and
+   (user.id=107388452 or user.id=90540453 or user.id=389415774 or user.id=736946060 or user.id=13006812 or user.id=207495935 or user.id=265170710 or user.id=330202197 or user.id=83343767 or user.id=896713730)
+   )
+   or
+   (
+   MONTH(DATE(created_at))=3 and YEAR(DATE(created_at))=2014 and
+   (user.id=293677777 or user.id=57028854 or user.id=107388452 or user.id=336788785 or user.id=536988920 or user.id=389445165 or user.id=1313010468 or user.id=1705703466 or user.id=295261244 or user.id=569684062)
+   )
+   or
+   (
+   MONTH(DATE(created_at))=3 and YEAR(DATE(created_at))=2015 and
+   (user.id=106258698 or user.id=96304148 or user.id=229728694 or user.id=865445167 or user.id=2274976376 or user.id=562266134 or user.id=369440099 or user.id=1593024847 or user.id=2269430017 or user.id=111033717 or user.id=140324345 or user.id=2886673816 or user.id=780687702 or user.id=2423640349 or user.id=2446841540 or user.id=408177579 or user.id=27260086 or user.id=3067014205)
+   )
+   or
+   (
+   MONTH(DATE(created_at))=3 and YEAR(DATE(created_at))=2016 and
+   (user.id=90540453 or user.id=106258698 or user.id=2575198087)
+   )
+   or
+   (
+   (MONTH(DATE(created_at))=3 and YEAR(DATE(created_at))=2017 and
+   user.id=260996262 or user.id=5633382 or user.id=1590430447 or user.id=3016503635 or user.id=773104101571768320 or user.id=2870475259)
+   )

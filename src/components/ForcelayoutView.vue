@@ -27,11 +27,7 @@ export default {
 </script>
 
 <style>
-.label {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  z-index: 1;
-  font-family: sans-serif;
+#forcelayout {
+  float: left;
 }
 </style>

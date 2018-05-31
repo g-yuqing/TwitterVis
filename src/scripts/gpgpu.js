@@ -1,6 +1,6 @@
 export default class GPGPU {
   constructor(tex_width, tex_height, data) {
-    this.iter = 800
+    this.iter = 400
     this.win_width = window.innerWidth
     this.win_height = window.innerHeight
     this.tex_width = tex_width
@@ -181,7 +181,8 @@ export default class GPGPU {
       this.nodes[i].x = x
       this.nodes[i].y = y
       this.nodes[i].size = 1
-      this.nodes[i].color = '#4682b4'
+      this.nodes[i].color = '#A59B9B'//'#4682b4'
+      this.nodes[i].cluster = -1
       this.positions.push([x, y])
     }
   }

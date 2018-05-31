@@ -11,15 +11,18 @@
       </el-select>
     </div>
     <forcelayout></forcelayout>
+    <splatting></splatting>
   </div>
 </template>
 
 <script>
 import Forcelayout from './components/ForcelayoutView'
+import Splatting from './components/SplattingView'
 export default {
   name: 'App',
   components: {
     forcelayout: Forcelayout,
+    splatting: Splatting,
   },
   data: () => ({
     dataset: [],
@@ -37,17 +40,19 @@ export default {
   mounted() {
     this.loadData()
     this.drawForcelayout(this.year)
+    this.drawSplatting(this.year)
   },
   watch: {
     year(val) {
       this.drawForcelayout(val)
+      this.drawSplatting(val)
     }
   },
   methods: {
     loadData() {
       const filename = ['2011', '2012', '2013', '2014', '2015', '2016', '2017']
       for(let i=0;i<filename.length;i++) {
-        const data = fetch('../static/march/'+filename[i]+'.json').then(res => res.json())
+        const data = fetch('../static/clustered/'+filename[i]+'.json').then(res => res.json())
         this.dataset.push(data)
       }
     },
@@ -56,6 +61,9 @@ export default {
         this.eventHub.$emit('initForcelayoutScene', dataset[year])
       })
     },
+    drawSplatting(year) {
+      this.eventHub.$emit('initSplattingScene', year)
+    }
   }
 }
 </script>
