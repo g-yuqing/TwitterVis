@@ -1,6 +1,7 @@
 import json
 import csv
 import numpy as np
+import pandas as pd
 import collections
 import networkx as nx
 import itertools
@@ -16,7 +17,7 @@ class Processor(object):
         '''
         load csv data, save as json file
         '''
-        with open('../data/march/retweet_state_march.csv', newline='') as f:
+        with open('../data/march/march.csv', newline='') as f:
             # reader = csv.reader(f, delimiter=' ', quotechar='|')
             dataset = collections.defaultdict(list)
             reader = csv.DictReader(f)
@@ -63,13 +64,13 @@ class Processor(object):
                         node_id[target] = uid
                         nodes.append(
                             dict(name=uid, degree=node_degree[target],
-                                 tid='T'+str(target)))
+                                 uid='T'+str(target)))
                         uid += 1
                     if source not in node_id:
                         node_id[source] = uid
                         nodes.append(
                             dict(name=uid, degree=node_degree[source],
-                                 tid='S'+str(source)))
+                                 uid='S'+str(source)))
                         uid += 1
                     edges.append(
                         dict(source=node_id[source], target=node_id[target]))
@@ -77,6 +78,32 @@ class Processor(object):
             res = dict(nodes=nodes, edges=edges)
             with open('../static/march/' + year + '.json', 'w') as f:
                 json.dump(res, f)
+
+    def popular_tweets(self):
+        dataset = pd.read_csv('../data/march/march.csv')
+        dataset = dataset.values
+        retweet_count = collections.defaultdict(int)
+        for data in dataset:
+            ymd, tid = data[0], data[3]
+            year = ymd.split('-')[0]
+            retweet_count[tid] += 1
+
+        def year_count():
+            return {'2011': 0, '2012': 0, '2013': 0, '2014': 0,
+                    '2015': 0, '2016': 0, '2017': 0}
+        retweet_count_details = collections.defaultdict(year_count)
+        threshold = 50
+        tweet_id = []
+        for data in dataset:
+            ymd, tid = data[0], data[3]
+            year = ymd.split('-')[0]
+            if retweet_count[tid] > threshold:
+                if tid not in tweet_id:
+                    tweet_id.append(tid)
+                retweet_count_details[tid][year] += 1
+        jsonfile = dict(tid=tweet_id, details=retweet_count_details)
+        with open('../data/march/popular_tweet.json', 'w') as f:
+            json.dump(jsonfile, f)
 
     def cluster_overview(self):
         years = ['2011', '2012', '2013', '2014', '2015', '2016', '2017']
@@ -90,24 +117,51 @@ class Processor(object):
                 year_info[node['cluster']].append(node)
             cluster_count = len(year_info)
             user_count_in_cluster = []
-            most_active_users = []
+            active_users_dict = {}
             for key, val in year_info.items():
+                if key == -1:
+                    continue
+                active_users = []
                 user_count_in_cluster.append(len(val))
                 val.sort(key=lambda x: x['degree'], reverse=True)
-                active_count = int(max(1, min(len(val)/100, 20)))
+                active_count = int(max(1, min(len(val)/100, 7)))
                 val_count = 0
-                while len(most_active_users) <= active_count:
-                    if 'S' in val[val_count]['tid']:
-                        most_active_users.append(val[val_count])
+                while len(active_users) <= active_count:
+                    if 'S' in val[val_count]['uid']:
+                        active_users.append(val[val_count])
                     val_count += 1
+                    if val_count >= len(val):
+                        break
+                active_users_dict[key] = active_users
                 # most_active_users.append(val[:active_count])
             clusters_info[year] = dict(cluster_count=cluster_count,
                                        user_per_count=user_count_in_cluster,
-                                       most_active_users=most_active_users)
+                                       most_active_users=active_users_dict)
         with open('../data/clustered/cluster_overview.json', 'w') as f:
             json.dump(clusters_info, f)
 
-    def node_contour(self):
+    def active_users(self):
+        '''
+        return most active users from cluster_overview file
+        '''
+        with open('../data/clustered/cluster_overview.json', 'r') as f:
+            dataset = json.load(f)
+        jsonfile = {}
+        for key, val in dataset.items():
+            most_active_users = val['most_active_users']
+            temp_users = []
+            for clst, userlist in most_active_users.items():
+                for user in userlist:
+                    uid = user['uid']
+                    temp_users.append(uid[1:])
+            jsonfile[key] = temp_users
+        with open('../data/clustered/temp.json', 'w') as f:
+            json.dump(jsonfile, f)
+
+    def cluster_contour(self):
+        '''
+        return contours of forcelayout graph each year
+        '''
         years = ['2011', '2012', '2013', '2014', '2015', '2016', '2017']
         result = {}
         for year in years:
@@ -129,6 +183,63 @@ class Processor(object):
             result[year] = counter_nodes
         with open('../data/clustered/cluster_counter.json', 'w') as f:
             json.dump(result, f)
+
+    def word_process(self):
+        '''
+        return word noun in each cluster yearly
+        '''
+        # return year_info => year: [{id: words},]
+        dataset = pd.read_csv('../data/clustered/active_users_words.csv')
+        dataset = dataset.values
+        year_info = collections.defaultdict(
+            lambda: collections.defaultdict(list))
+        for data in dataset:
+            ymd, influencer, words = data[0], 'S'+str(data[1]), data[4]
+            year = ymd.split('-')[0]
+            year_info[year][influencer].append(words)  # {2011:{id:[words]}}
+        # return year: {cluster1: [[],[]], cluster2: [[]]}
+        with open('../data/clustered/cluster_overview.json', 'r') as f:
+            overview = json.load(f)  # {2011:{most_active_users:[{},{}]}}
+        jsonfile = {}  # {2011: {0:[[],[]], 1:[[],[]}
+        for year, information in overview.items():
+            uid_words = year_info[year]
+            cluster_words = collections.defaultdict(list)
+            for clst, nodelist in information['most_active_users'].items():
+                for node in nodelist:
+                    user = node['uid']
+                    words = uid_words[user]
+                    cluster_words[clst].append(words)
+            jsonfile[year] = cluster_words
+        with open('../static/clustered/cluster_words.json', 'w') as f:
+            json.dump(jsonfile, f)
+
+    def word_clouds(self):
+        '''
+        return word cloud
+        {year: {cluster:{word: count}}}
+        '''
+        with open('../data/clustered/cluster_words.json', 'r') as f:
+            dataset = json.load(f)
+        jsonfile = {}
+        for year, clusters in dataset.items():
+            cluster_words = {}
+            for clst, clst_info in clusters.items():
+                word_count = collections.defaultdict(int)
+                for wordlist in clst_info:
+                    for words in wordlist:
+                        try:
+                            word_temps = words.split(' ')
+                        except:
+                            continue
+                        for word in word_temps:
+                            word_count[word] += 1
+                word_count_list = []
+                for key, val in word_count.items():
+                    word_count_list.append([key, val])
+                cluster_words[clst] = word_count_list
+            jsonfile[year] = cluster_words
+        with open('../static/clustered/word_clouds.json', 'w') as f:
+            json.dump(jsonfile, f)
 
     def graphSimilarity(self):
         '''
@@ -252,26 +363,12 @@ class Processor(object):
             json.dump(graphlets, f)
 
 
-def most_active_users():
-    with open('../data/clustered/cluster_overview.json', 'r') as f:
-        dataset = json.load(f)
-    jsonfile = {}
-    for key, val in dataset.items():
-        most_active_users = val['most_active_users']
-        temp_user = []
-        for cluster_user in most_active_users:
-            for user in cluster_user:
-                uid = user['tid']
-                temp_user.append(uid[1:])
-        jsonfile[key] = temp_user
-    with open('../data/clustered/temp.json', 'w') as f:
-        json.dump(jsonfile, f)
-
-
 if __name__ == '__main__':
     processor = Processor()
     # processor.forcelayoutJSON()
     # processor.graphSimilarity()
-    processor.cluster_overview()
-    # processor.node_contour()
-    # most_active_users()
+    # processor.cluster_overview()
+    # processor.cluster_contour()
+    # processor.active_users()
+    # processor.word_process()
+    processor.word_clouds()

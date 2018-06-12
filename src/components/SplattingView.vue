@@ -12,7 +12,7 @@ export default {
     sp: new Splatting(),
   }),
   mounted() {
-    this.eventHub.$on('initSplattingScene', year => this.sp.initScene(year))
+    this.eventHub.$on('initSplattingScene', (contours, words) => this.sp.initScene(contours, words))
   },
 }
 </script>

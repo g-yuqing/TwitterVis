@@ -10,22 +10,22 @@
         </el-option>
       </el-select>
     </div>
-    <forcelayout></forcelayout>
     <splatting></splatting>
+    <canvas id="word_canvas"></canvas>
   </div>
 </template>
 
 <script>
-import Forcelayout from './components/ForcelayoutView'
 import Splatting from './components/SplattingView'
 export default {
   name: 'App',
   components: {
-    forcelayout: Forcelayout,
     splatting: Splatting,
   },
   data: () => ({
     dataset: [],
+    word_data: null,
+    contour_data: null,
     year: 0,
     years: [
       {value: 0, label: '2011'},
@@ -39,30 +39,28 @@ export default {
   }),
   mounted() {
     this.loadData()
-    this.drawForcelayout(this.year)
-    this.drawSplatting(this.year)
+      .then(dataset => {
+        this.word_data = dataset.word_data
+        this.contour_data = dataset.contour_data
+        this.drawSplatting(this.year)
+      })
   },
   watch: {
     year(val) {
-      this.drawForcelayout(val)
       this.drawSplatting(val)
     }
   },
   methods: {
-    loadData() {
-      const filename = ['2011', '2012', '2013', '2014', '2015', '2016', '2017']
-      for(let i=0;i<filename.length;i++) {
-        const data = fetch('../static/clustered/'+filename[i]+'.json').then(res => res.json())
-        this.dataset.push(data)
-      }
-    },
-    drawForcelayout(year) {
-      Promise.all(this.dataset).then(dataset => {
-        this.eventHub.$emit('initForcelayoutScene', dataset[year])
-      })
+    async loadData() {
+      let res = await fetch('../static/clustered/word_clouds.json')
+      const word_data = await res.json()
+      res = await fetch('../static/clustered/cluster_contours.json')
+      const contour_data = await res.json()
+      return {word_data: word_data, contour_data: contour_data}
     },
     drawSplatting(year) {
-      this.eventHub.$emit('initSplattingScene', year)
+      const index = this.years[year].label
+      this.eventHub.$emit('initSplattingScene', this.contour_data[index], this.word_data[index])
     }
   }
 }
