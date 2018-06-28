@@ -30,4 +30,7 @@ export default {
 #forcelayout {
   float: left;
 }
+.nodes circle {
+
+}
 </style>

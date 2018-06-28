@@ -49,8 +49,8 @@ void main() {
             float y_dist = node_i.g - node_j.g;
             float dist = sqrt(x_dist*x_dist + y_dist*y_dist);
             if(dist > 0.0) {
-                // float repl_f = k_2 / dist;
-                float repl_f = 0.00004*float(node_i.a)*float(node_j.a)/dist;
+                float repl_f = k_2 / dist;
+                // float repl_f = 0.00004*float(node_i.a)*float(node_j.a)/dist;
                 dx += x_dist / dist * repl_f;
                 dy += y_dist / dist * repl_f;
             }
@@ -85,8 +85,8 @@ void main() {
         float x_dist = node_i.r - node_j.r;
         float y_dist = node_i.g - node_j.g;
         float dist = sqrt(x_dist*x_dist + y_dist*y_dist);
-        // float attr_f = dist * dist / k;
-        float attr_f = log(1.0+dist);
+        float attr_f = dist * dist / k;
+        // float attr_f = log(1.0+dist);
         if(dist > 0.0) {
             dx -= x_dist / dist * attr_f;
             dy -= y_dist / dist * attr_f;
@@ -94,8 +94,8 @@ void main() {
     }
     //gravity
     float d = sqrt(node_i.r*node_i.r + node_i.g*node_i.g);
-    // float gf = 0.01 * k * gravity * d;
-    float gf = gravity*(node_i.a+1.0);
+    float gf = 0.01 * k * gravity * d;
+    // float gf = gravity*(node_i.a+1.0);
     dx -= gf * node_i.r / d;
     dy -= gf * node_i.g / d;
     //speed

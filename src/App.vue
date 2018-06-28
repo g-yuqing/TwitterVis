@@ -1,66 +1,86 @@
 <template>
   <div id="app">
-    <div id="selector">
-      <el-select v-model="year" placeholder="2011">
-        <el-option
-          v-for="y in years"
-          :key="y.value"
-          :label="y.label"
-          :value="y.value">
-        </el-option>
-      </el-select>
+    <div id="keyword-bar">
+      <el-tag
+        :key="tag"
+        v-for="tag in dynamicTags"
+        closable
+        :disable-transitions="false"
+        @close="handleClose(tag)">
+        {{tag}}
+      </el-tag>
+      <el-input
+        class="input-new-tag"
+        v-if="inputVisible"
+        v-model="inputValue"
+        ref="saveTagInput"
+        size="small"
+        @keyup.enter.native="handleInputConfirm"
+        @blur="handleInputConfirm">
+      </el-input>
+      <el-button v-else class="button-new-tag" size="small" @click="showInput">+ New Tag</el-button>
     </div>
-    <splatting></splatting>
-    <canvas id="word_canvas"></canvas>
+    <layout></layout>
   </div>
 </template>
 
 <script>
-import Splatting from './components/SplattingView'
+import Layout from './components/LayoutView'
+
+
 export default {
   name: 'App',
   components: {
-    splatting: Splatting,
+    layout: Layout,
   },
   data: () => ({
-    dataset: [],
-    word_data: null,
-    contour_data: null,
-    year: 0,
-    years: [
-      {value: 0, label: '2011'},
-      {value: 1, label: '2012'},
-      {value: 2, label: '2013'},
-      {value: 3, label: '2014'},
-      {value: 4, label: '2015'},
-      {value: 5, label: '2016'},
-      {value: 6, label: '2017'},
-    ]
+    dynamicTags: ['原発', '事故', '避難', '放射能'],
+    inputVisible: false,
+    inputValue: ''
   }),
   mounted() {
     this.loadData()
       .then(dataset => {
-        this.word_data = dataset.word_data
-        this.contour_data = dataset.contour_data
-        this.drawSplatting(this.year)
+        this.mdsData = dataset.mdsData
+        this.egoData = dataset.egoData
+        this.drawLayout()
       })
   },
   watch: {
-    year(val) {
-      this.drawSplatting(val)
+    dynamicTags(val) {
+      this.eventHub.$emit('updateLayoutScene', this.dynamicTags)
     }
   },
   methods: {
     async loadData() {
-      let res = await fetch('../static/clustered/word_clouds.json')
-      const word_data = await res.json()
-      res = await fetch('../static/clustered/cluster_contours.json')
-      const contour_data = await res.json()
-      return {word_data: word_data, contour_data: contour_data}
+      let res = await fetch('../static/mds_layout.json')
+      const mdsData = await res.json()
+      res = await fetch('../static/ego_network.json')
+      const egoData = await res.json()
+      return {mdsData: mdsData, egoData: egoData}
     },
-    drawSplatting(year) {
-      const index = this.years[year].label
-      this.eventHub.$emit('initSplattingScene', this.contour_data[index], this.word_data[index])
+    // layout methods
+    drawLayout() {
+      // document.getElementById('layout').innerHTML = ''
+      this.eventHub.$emit('initLayoutScene', this.mdsData, this.dynamicTags, this.egoData)
+    },
+    // tag methods
+    handleClose(tag) {
+      this.dynamicTags.splice(this.dynamicTags.indexOf(tag), 1)
+    },
+    showInput() {
+      this.inputVisible = true;
+      this.$nextTick(_ => {
+      this.$refs.saveTagInput.$refs.input.focus()
+      })
+    },
+    handleInputConfirm() {
+      let inputValue = this.inputValue
+      if (inputValue) {
+        this.dynamicTags.push(inputValue)
+      }
+      this.inputVisible = false
+      this.inputValue = ''
     }
   }
 }
@@ -71,8 +91,21 @@ export default {
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  /* text-align: center; */
   color: #2c3e50;
-  /* margin-top: 60px; */
+}
+.el-tag + .el-tag {
+  margin-left: 10px;
+}
+.button-new-tag {
+  margin-left: 10px;
+  height: 32px;
+  line-height: 30px;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+.input-new-tag {
+  width: 90px;
+  margin-left: 10px;
+  vertical-align: bottom;
 }
 </style>

@@ -1,6 +1,6 @@
 export default class GPGPU {
   constructor(tex_width, tex_height, data) {
-    this.iter = 400
+    this.iter = 600
     this.win_width = window.innerWidth
     this.win_height = window.innerHeight
     this.tex_width = tex_width
@@ -175,14 +175,16 @@ export default class GPGPU {
     const result = new Float32Array(this.len)
     this.gl.readPixels(0, 0, this.tex_width, this.tex_height, this.gl.RGBA, this.gl.FLOAT, result)
     for(let i=0; i<this.nodes.length; i++) {
-      this.nodes[i].id = this.nodes[i].name
+      // this.nodes[i].id = this.nodes[i].name
       const x = result[4*i]
       const y = result[4*i+1]
       this.nodes[i].x = x
       this.nodes[i].y = y
       this.nodes[i].size = 1
-      this.nodes[i].color = '#A59B9B'//'#4682b4'
-      this.nodes[i].cluster = -1
+      this.nodes[i].color = '#e6194b'
+      // this.nodes[i].size = this.nodes[i].name[0] == 'S' ? 5 : 2
+      // this.nodes[i].color = this.nodes[i].name[0] == 'S' ? '#e6194b' : '#A59B9B'
+      // this.nodes[i].cluster = -1
       this.positions.push([x, y])
     }
   }

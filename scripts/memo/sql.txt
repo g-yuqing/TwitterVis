@@ -1,0 +1,115 @@
+SELECT
+  DATE(created_at) AS date,
+  user.id AS user,
+  retweeted_status.user.id AS influencer,
+  retweeted_status.id AS retweet_id
+FROM
+  [vizlab-crest:postcrisis_PQX.tweets]
+WHERE
+  MONTH(DATE(created_at)) = 3 and
+  retweeted_status.user.id IS NOT NULL
+
+
+  # query quarter data
+  SELECT
+    DATE(created_at) AS date,
+    user.id AS user,
+    retweeted_status.user.id AS influencer,
+    retweeted_status.id AS retweet_id
+  FROM
+    [vizlab-crest:postcrisis_PQX.tweets]
+  WHERE
+    (MONTH(DATE(created_at)) = 3 OR
+    MONTH(DATE(created_at)) = 4 OR
+    MONTH(DATE(created_at)) = 5) AND
+    retweeted_status.user.id IS NOT NULL AND
+    retweeted_status.id IS NOT NULL AND
+    user.id IS NOT NULL
+
+  # query quarter data with recorded tweet
+  SELECT
+    *
+  FROM
+    `vizlab-crest.guanyq.quarter` AS A
+  WHERE
+    EXISTS (SELECT 1
+            FROM `vizlab-crest.postcrisis_PQX.words_noun` AS B
+            WHERE A.retweet_id = B.tweet_id)
+
+  # full information of quarter
+  SELECT
+    A.tweet_id as tweet_id, A.words as words, DATE(B.created_at) as date, B.user.id AS author, B.text AS text
+  FROM
+    `vizlab-crest.guanyq.quarter_words`  AS A, `vizlab-crest.postcrisis_PQX.tweets` AS B
+  WHERE
+    A.tweet_id = B.id
+
+
+
+
+
+ when export table my bucket = guanyq
+
+
+
+   # active users text
+   SELECT
+     DATE(created_at) as date, user.id as user_id, id, text
+   FROM
+     [vizlab-crest:postcrisis_PQX.tweets]
+   WHERE
+     (
+     MONTH(DATE(created_at))<=3 and YEAR(DATE(created_at))=2011 and
+     (user.id=256401886 or user.id=266493890 or user.id=227233751 or user.id=93311525 or user.id=13006812 or user.id=122909208 or user.id=4171231 or user.id=99008565 or user.id=114351955 or user.id=100650241 or user.id=180986694 or user.id=93594343 or user.id=155881793 or user.id=148536009 or user.id=152599635 or user.id=211187113 or user.id=84768933 or user.id=265272677 or user.id=44294411 or user.id=127997944 or user.id=154404968 or user.id=166032380 or user.id=7798912 or user.id=264569817)
+     )
+     or
+     (
+     MONTH(DATE(created_at))<=3 and YEAR(DATE(created_at))=2012 and
+     (user.id=90540453 or user.id=96304148 or user.id=356811859 or user.id=336788785 or user.id=88581459 or user.id=107388452 or user.id=106258698 or user.id=57048947 or user.id=17616108 or user.id=96828010 or user.id=149799182 or user.id=128504491 or user.id=57028854 or user.id=362542738 or user.id=110367990 or user.id=142313114 or user.id=305320283 or user.id=275564242 or user.id=266341118 or user.id=280113522 or user.id=170557828 or user.id=268019824 or user.id=52335186 or user.id=299541680 or user.id=200622686 or user.id=406406391 or user.id=185100021 or user.id=264264753 or user.id=371446213 or user.id=230424629 or user.id=320360635 or user.id=163924739 or user.id=88386843 or user.id=498915846)
+     )
+     or
+     (
+     MONTH(DATE(created_at))<=3 and YEAR(DATE(created_at))=2013 and
+     (user.id=107388452 or user.id=90540453 or user.id=541345665 or user.id=336788785 or user.id=269125621 or user.id=96304148 or user.id=144395772 or user.id=204245399 or user.id=389415774 or user.id=736946060 or user.id=755368129 or user.id=344810828 or user.id=312086510 or user.id=13006812 or user.id=207495935 or user.id=102388128 or user.id=132050631 or user.id=203396613 or user.id=371446213 or user.id=451506223 or user.id=411460012 or user.id=185100021)
+     )
+     or
+     (
+     MONTH(DATE(created_at))<=3 and YEAR(DATE(created_at))=2014 and
+     (user.id=293677777 or user.id=57028854 or user.id=13006812 or user.id=203396613 or user.id=14565539 or user.id=865445167 or user.id=12449362 or user.id=336788785 or user.id=119610564 or user.id=95647380 or user.id=106258698 or user.id=249530882 or user.id=204245399 or user.id=96304148 or user.id=90540453 or user.id=1705703466 or user.id=2177883343 or user.id=1389158485 or user.id=347561607 or user.id=528935713 or user.id=1957521336 or user.id=1528486034 or user.id=2170118762 or user.id=295261244 or user.id=1086139884 or user.id=1913794885 or user.id=1903549572)
+     )
+     or
+     (
+     MONTH(DATE(created_at))<=3 and YEAR(DATE(created_at))=2015 and
+     (user.id=106258698 or user.id=96304148 or user.id=193261837 or user.id=132936977 or user.id=269125621 or user.id=90540453 or user.id=64991261 or user.id=356811859 or user.id=229728694 or user.id=865445167 or user.id=13006812 or user.id=104752769 or user.id=842997463 or user.id=1438041654 or user.id=203396613 or user.id=123017569 or user.id=369440099 or user.id=2332070849 or user.id=1952368916 or user.id=569684062 or user.id=2269430017 or user.id=2267767092 or user.id=307148796 or user.id=505747057 or user.id=140324345 or user.id=811933609 or user.id=780687702 or user.id=254059539 or user.id=2179417848 or user.id=2924253445 or user.id=1459537578 or user.id=2318453659 or user.id=408177579 or user.id=46116615 or user.id=27260086 or user.id=2207321624 or user.id=2495955542 or user.id=1172165240)
+     )
+     or
+     (
+     MONTH(DATE(created_at))<=3 and YEAR(DATE(created_at))=2016 and
+     (user.id=90540453 or user.id=106258698 or user.id=524294327 or user.id=57028854 or user.id=119610564 or user.id=204245399 or user.id=133315625 or user.id=107388452)
+     )
+     or
+     (
+     MONTH(DATE(created_at))<=3 and YEAR(DATE(created_at))=2017 and
+     (user.id=260996262 or user.id=5633382 or user.id=490969812 or user.id=524294327 or user.id=106258698 or user.id=57028854 or user.id=204245399 or user.id=267106034 or user.id=1590430447 or user.id=2856757220 or user.id=4861268021 or user.id=4861140669 or user.id=2870475259 or user.id=2740242523)
+     )
+
+
+     # active users words noun
+     SELECT
+       A.date, A.user_id, A.id_str, A.text, B.words
+     FROM
+       `vizlab-crest.guanyq.active_users_tweets` AS A, `vizlab-crest.postcrisis_PQX.words_noun` AS B
+     WHERE
+       A.tweet_id = B.tweet_id
+
+
+
+
+
+     # popular tweet words
+     SELECT
+       A.tweet_id as tweet_id, A.words as words
+     FROM
+       `vizlab-crest.postcrisis_PQX.words_noun` AS A
+     WHERE
+       A.tweet_id=852026614359629826 or A.tweet_id=840917328837591044 or A.tweet_id=840484355604586496 or A.tweet_id=847286267742085121 or A.tweet_id=848521527989460993 or A.tweet_id=840168888713138177 or A.tweet_id=849201713722478592 or A.tweet_id=865125847165947904 or A.tweet_id=867197762911166469 or A.tweet_id=865751714212659200 or A.tweet_id=842571621202243584 or A.tweet_id=851709682599075840 or A.tweet_id=840538910652424192 or A.tweet_id=849255504215818241 or A.tweet_id=850138091545255936 or A.tweet_id=837858386062409728 or A.tweet_id=865673334415015936 or A.tweet_id=850289447849426945 or A.tweet_id=849203698278424576 or A.tweet_id=846768999325052929 or A.tweet_id=857444925935304704 or A.tweet_id=843635828941193217 or A.tweet_id=850631726481022976 or A.tweet_id=868666427107979265 or A.tweet_id=849959544830570496 or A.tweet_id=849402717021798400 or A.tweet_id=856758490483761152 or A.tweet_id=849292424304132096 or A.tweet_id=847296347954855936 or A.tweet_id=852102075651694592 or A.tweet_id=844615780842975232 or A.tweet_id=837571289036406784 or A.tweet_id=839833188281143296 or A.tweet_id=837989413791526912 or A.tweet_id=868837783430873088 or A.tweet_id=841398081773948928 or A.tweet_id=733114751912267777 or A.tweet_id=721322771104444416 or A.tweet_id=708439670946795521 or A.tweet_id=720625023631773697 or A.tweet_id=721348751823011840 or A.tweet_id=732861997969117184 or A.tweet_id=736122183596969984 or A.tweet_id=736717137717252096 or A.tweet_id=736006847295954944 or A.tweet_id=716940123833651200 or A.tweet_id=717922257591357440 or A.tweet_id=707467436736581633 or A.tweet_id=736842951276400640 or A.tweet_id=736881664614236160 or A.tweet_id=708645848528216064 or A.tweet_id=723139415464235009 or A.tweet_id=735066420422148097 or A.tweet_id=729117659803983872 or A.tweet_id=720753857635033089 or A.tweet_id=712428820645617664 or A.tweet_id=723135095998021633 or A.tweet_id=707952883480657920 or A.tweet_id=726939596919992321 or A.tweet_id=729273865554137088 or A.tweet_id=720598493446836224 or A.tweet_id=704805257398734848 or A.tweet_id=709749894160863232 or A.tweet_id=699961826218373124 or A.tweet_id=721213580264099841 or A.tweet_id=713270598592372736 or A.tweet_id=711131845786636288 or A.tweet_id=182384839054467072 or A.tweet_id=191168970970238976 or A.tweet_id=176302584850677760 or A.tweet_id=183138841534808064 or A.tweet_id=184444772302336001 or A.tweet_id=180202569329688576 or A.tweet_id=175551983778938881 or A.tweet_id=178129005646589952 or A.tweet_id=207413888289996800 or A.tweet_id=202034201694973953 or A.tweet_id=185764029728428033 or A.tweet_id=205998498666119168 or A.tweet_id=190371651710492672 or A.tweet_id=176633113789726721 or A.tweet_id=182886734579777536 or A.tweet_id=198566049954791425 or A.tweet_id=175418323293581312 or A.tweet_id=177889818481664000 or A.tweet_id=204887186225631232 or A.tweet_id=190284353329311744 or A.tweet_id=177740773821915137 or A.tweet_id=185500315611705344 or A.tweet_id=191145254949355521 or A.tweet_id=192362401499328512 or A.tweet_id=178722223727714305 or A.tweet_id=203342449739968512 or A.tweet_id=187185324210913281 or A.tweet_id=206013766188531712 or A.tweet_id=200272514360950785 or A.tweet_id=178747477862785025 or A.tweet_id=207326475236548608 or A.tweet_id=316799079843786752 or A.tweet_id=310985898982510592 or A.tweet_id=291193150951804931 or A.tweet_id=328215067650818048 or A.tweet_id=310364124708237312 or A.tweet_id=333560962919575553 or A.tweet_id=328310520094543872 or A.tweet_id=318199883863560194 or A.tweet_id=310604899341721600 or A.tweet_id=319639926343884800 or A.tweet_id=314507111772065792 or A.tweet_id=321457685985894400 or A.tweet_id=330321383563358212 or A.tweet_id=317051879806869504 or A.tweet_id=333219205090516993 or A.tweet_id=309902206054834177 or A.tweet_id=338301663712522245 or A.tweet_id=338155963666268160 or A.tweet_id=335960245501296641 or A.tweet_id=314038760545333248 or A.tweet_id=336031512254353408 or A.tweet_id=318661603438497792 or A.tweet_id=310904269404524544 or A.tweet_id=333386802276745216 or A.tweet_id=335374431226576896 or A.tweet_id=307807806948515840 or A.tweet_id=317857971566686208 or A.tweet_id=338177916020068353 or A.tweet_id=316088497792499712 or A.tweet_id=329426978379812864 or A.tweet_id=332828892433887232 or A.tweet_id=466145533988335617 or A.tweet_id=385726784898998273 or A.tweet_id=440830710610284545 or A.tweet_id=441452207716585472 or A.tweet_id=454145146213240832 or A.tweet_id=459310858980433920 or A.tweet_id=464709264523546626 or A.tweet_id=461676254064680960 or A.tweet_id=453191896379052035 or A.tweet_id=447383619657428992 or A.tweet_id=470877507260923904 or A.tweet_id=465695748181336067 or A.tweet_id=471453134196183040 or A.tweet_id=465151176447520770 or A.tweet_id=460771365184733184 or A.tweet_id=266497062860910592 or A.tweet_id=439764986978516992 or A.tweet_id=472116952429633536 or A.tweet_id=459225831399624704 or A.tweet_id=467486287952220160 or A.tweet_id=441349684867506178 or A.tweet_id=469349912891912192 or A.tweet_id=468016433952079872 or A.tweet_id=446984990245400576 or A.tweet_id=440814648820891648 or A.tweet_id=444166509326123008 or A.tweet_id=443374834538409985 or A.tweet_id=461059682191151104 or A.tweet_id=443264655952056320 or A.tweet_id=469332281467736065 or A.tweet_id=467623049299120128 or A.tweet_id=385726784898998273 or A.tweet_id=587762758269009920 or A.tweet_id=596429489296408576 or A.tweet_id=566670660718432257 or A.tweet_id=601033667561988096 or A.tweet_id=593733784240959489 or A.tweet_id=575576393918078976 or A.tweet_id=589439240683053056 or A.tweet_id=588673101484830721 or A.tweet_id=580991509786333184 or A.tweet_id=574517014502334464 or A.tweet_id=596300900634755073 or A.tweet_id=575463889992724480 or A.tweet_id=571792460482945024 or A.tweet_id=588158257656659968 or A.tweet_id=588674041835163648 or A.tweet_id=587251589322182656 or A.tweet_id=575933607899873283 or A.tweet_id=572797359333093379 or A.tweet_id=591310925925330945 or A.tweet_id=591218431149477888 or A.tweet_id=581077235156848640 or A.tweet_id=573619536513142785 or A.tweet_id=580674454969176064 or A.tweet_id=589506230508466177 or A.tweet_id=602452202246905856 or A.tweet_id=577306434611752960 or A.tweet_id=571816635054473216 or A.tweet_id=572959680533643264 or A.tweet_id=584141851336155137 or A.tweet_id=580888927592001537 or A.tweet_id=68589255584264192 or A.tweet_id=46488800410607616 or A.tweet_id=48021973070123008 or A.tweet_id=46489206893195264 or A.tweet_id=50437229922893824 or A.tweet_id=47492218314948609 or A.tweet_id=47314084298899456 or A.tweet_id=46757998403661824 or A.tweet_id=47240966763069440 or A.tweet_id=49144757376655360 or A.tweet_id=54906863392800768 or A.tweet_id=46445369026031616 or A.tweet_id=47845645771472896 or A.tweet_id=46206587550973953 or A.tweet_id=46143829316874240 or A.tweet_id=49019759869706240 or A.tweet_id=47633992534605824 or A.tweet_id=68840274536833024 or A.tweet_id=48339544138973184 or A.tweet_id=43163667654639616 or A.tweet_id=48744323176599552 or A.tweet_id=49020602002055168 or A.tweet_id=47493590745743361 or A.tweet_id=63113259703746560 or A.tweet_id=50591848691011584 or A.tweet_id=46141776641277952 or A.tweet_id=47168565270417409 or A.tweet_id=47408184352186368 or A.tweet_id=48461081076703232 or A.tweet_id=47306806845902848 or A.tweet_id=47088068049649664 or A.tweet_id=50712786250113024 or A.tweet_id=47972225042759681 or A.tweet_id=47329127530897409 or A.tweet_id=49020450415714304 or A.tweet_id=46514460306845696 or A.tweet_id=50198994084831233 or A.tweet_id=47104396265406464 or A.tweet_id=65913766499454978 or A.tweet_id=49599296642879488 or A.tweet_id=46915643752189952 or A.tweet_id=46764157982343169 or A.tweet_id=49315648274313217 or A.tweet_id=52596735310172160 or A.tweet_id=46623239123906561 or A.tweet_id=46528791358611456 or A.tweet_id=47998881119744000 or A.tweet_id=62290216790130688 or A.tweet_id=47208774498385920 or A.tweet_id=46196945101918208 or A.tweet_id=71303803768541185 or A.tweet_id=46099251498991616 or A.tweet_id=64181158258278400 or A.tweet_id=57604822320414720 or A.tweet_id=49043581217943552 or A.tweet_id=46531836171653120 or A.tweet_id=47126741378023424 or A.tweet_id=70859007786622976 or A.tweet_id=50502659521785856 or A.tweet_id=53590412966903808 or A.tweet_id=64131967540670464 or A.tweet_id=73390475918327808 or A.tweet_id=50448559413280768 or A.tweet_id=51942883984539648 or A.tweet_id=58509062647713792
