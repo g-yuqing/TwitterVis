@@ -41,8 +41,7 @@ export default {
   mounted() {
     this.loadData()
       .then(dataset => {
-        this.mdsData = dataset.mdsData
-        this.egoData = dataset.egoData
+        this.graphData = dataset
         this.drawLayout()
       })
   },
@@ -53,16 +52,14 @@ export default {
   },
   methods: {
     async loadData() {
-      let res = await fetch('../static/mds_layout.json')
-      const mdsData = await res.json()
-      res = await fetch('../static/ego_network.json')
-      const egoData = await res.json()
-      return {mdsData: mdsData, egoData: egoData}
+      const res = await fetch('../static/layout.json')
+      const graphData = await res.json()
+      return graphData
     },
     // layout methods
     drawLayout() {
       // document.getElementById('layout').innerHTML = ''
-      this.eventHub.$emit('initLayoutScene', this.mdsData, this.dynamicTags, this.egoData)
+      this.eventHub.$emit('initLayoutScene', this.graphData, this.dynamicTags)
     },
     // tag methods
     handleClose(tag) {

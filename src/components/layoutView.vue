@@ -31,7 +31,6 @@
 <script>
 import * as d3 from 'd3'
 import drawTimeline from '../scripts/timeline'
-import drawForcelayout from '../scripts/forcedirectedlayout'
 import drawEgolayout from '../scripts/egolayout'
 
 
@@ -48,7 +47,7 @@ export default {
       '#ffd8b1', '#000080', '#808080', '#FFFFFF', '#000000']
   }),
   mounted() {
-    this.eventHub.$on('initLayoutScene', (dataset, tags, egoData) => this.initScene(dataset, tags, egoData))
+    this.eventHub.$on('initLayoutScene', (dataset, tags) => this.initScene(dataset, tags))
     this.eventHub.$on('updateLayoutScene', tags => this.updateScene(tags))
   },
   watch: {
@@ -65,7 +64,22 @@ export default {
       }
     },
     // mdslayout methods
-    initScene(dataset, tags, egoData) {
+    initScene(dataset, tags) {
+      this.mdsData = dataset.mds
+      const egoData = dataset.ego
+      this.tagData = dataset.tag
+      const tidtime = dataset.tidtime
+      const tidtext = dataset.tidtext
+
+      // extend tag
+      const keywords = []
+      tags.forEach(d => {
+        this.tagData[d].forEach(dd => {
+          keywords.push(dd)
+        })
+      })
+      const tidList = []  // aviod repeatition
+
       const margin = {top: 30, right: 50, bottom: 10, left:20},
         width = window.innerWidth,
         height = window.innerHeight,
@@ -96,26 +110,24 @@ export default {
         .style('font-size', '17px')
         .style('fill', 'steelblue')
         .text(d => d.text)
-      this.data = dataset.data
-      const tidtime = dataset.tidtime
-      const tidtext = dataset.tidtext
       // adjust data positions
       const xScale = d3.scaleLinear()
         .range([0, cellWidth])
-        .domain(d3.extent(this.data, d => d.x))
+        .domain(d3.extent(this.mdsData, d => d.x))
       const yScale = d3.scaleLinear()
         .range([cellHeight, 0])
-        .domain(d3.extent(this.data, d => d.y))
+        .domain(d3.extent(this.mdsData, d => d.y))
       const year_nodes = {}
       const year_positions = {}
-      this.data.forEach((d, i) => {
+      this.mdsData.forEach((d, i) => {
         d.id = i
         d.x = xScale(d.x)+(+d.year-2011)*(cellWidth+cellSpace)
         d.y = yScale(d.y)
         // init datatable
-        for(const t in tags) {
-          const tag = tags[t]
-          if(d.noun.includes(tag)) {
+        for(const t in keywords) {
+          const tag = keywords[t]
+          if(d.noun.includes(tag) && !tidList.includes(d.tid)) {
+            tidList.push(d.tid)
             this.tableData.push({count:d.cotids[0][1], text: d.text})
           }
         }
@@ -126,14 +138,14 @@ export default {
       const g = svg.append('g')
         .attr('id', 'mds-g')
         .attr('transform', `translate(${margin.left}, ${margin.top})`)
-      g.selectAll('.mdsdot').data(this.data)
+      g.selectAll('.mdsdot').data(this.mdsData)
         .enter().append('circle')
         .attr('r', 2.5)
         .attr('cx', d => d.x)
         .attr('cy', d => d.y)
         .style('fill', d => {
-          for(const t in tags) {
-            const tag = tags[t]
+          for(const t in keywords) {
+            const tag = keywords[t]
             if(d.noun.includes(tag)) {
               return '#e6194b'
             }
@@ -149,13 +161,13 @@ export default {
           const cotweets = d.cotids.map(dd => dd[0])
           g.selectAll('circle').style('stroke', dd => cotweets.includes(dd.tid)?'#000':null)
           // draw timeline
-          const timelineData = tidtime[d.tid]
-          drawTimeline(timelineData)
+          drawTimeline(tidtime[d.tid])
+          // draw ego network
           drawEgolayout(egoData[d.tid])
         })
       //init scene
       // init selected node
-      const initData = this.data[0]
+      const initData = this.mdsData[0]
       svg.append('g')
         .attr('id', 'selected-g')
         .attr('transform', `translate(${margin.left}, ${margin.top})`)
@@ -169,27 +181,36 @@ export default {
       const cotweets = initData.cotids.map(dd => dd[0])
       g.selectAll('circle').style('stroke', dd => cotweets.includes(dd.tid)?'#000':null)
       // init timeline
-      const timelineData = tidtime[initData.tid]
-      drawTimeline(timelineData)
+      drawTimeline(tidtime[initData.tid])
+      // init ego network
       drawEgolayout(egoData[initData.tid])
     },
     updateScene(tags) {
+      const keywords = []  // extend tag
+      const tidList = []  // aviod repeatition
+      tags.forEach(d => {
+        this.tagData[d].forEach(dd => {
+          keywords.push(dd)
+        })
+      })
+      console.log(keywords);
       d3.select('#mds-g').selectAll('circle')
         .style('fill', d => {
-          for(const t in tags) {
-            const tag = tags[t]
+          for(const t in keywords) {
+            const tag = keywords[t]
             if(d.noun.includes(tag)) {
               return '#e6194b'
             }
           }
           return '#80808033'
         })
-      // init datatable
+      // set datatable
       this.tableData = []
-      this.data.forEach((d, i) => {
-        for(const t in tags) {
-          const tag = tags[t]
-          if(d.noun.includes(tag)) {
+      this.mdsData.forEach((d, i) => {
+        for(const t in keywords) {
+          const tag = keywords[t]
+          if(d.noun.includes(tag) && !tidList.includes(d.tid)) {
+            tidList.push(d.tid)
             this.tableData.push({count:d.cotids[0][1], text: d.text})
           }
         }

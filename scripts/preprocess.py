@@ -28,6 +28,9 @@ class Nlp():
         model.save('../data/model/wiki.model')
 
     def year_retweet(self):
+        '''
+        return yearly tweet information
+        '''
         print('preprocess data')
         tid_text = {}  # tid: content
         year_tweet = collections.defaultdict(list)  # classify tweet by year
@@ -52,6 +55,9 @@ class Nlp():
         return year_tweet
 
     def similarity_dist(self):
+        '''
+        return cosine dist of yearly tweet data
+        '''
         print('calculate similarity dist')
         mt = MeCab.Tagger('')
         mt.parse('')
@@ -103,52 +109,65 @@ class Nlp():
         with open('../data/text_dist.json', 'w') as f:
             json.dump(year_cosdist, f)
 
-    def word_cloud(self):
-        word_count = collections.defaultdict(int)
+    def word_list(self):
+        '''
+        return keyword and related words
+        '''
+        word_list = {}
         dataset = pd.read_csv('../data/words_noun.csv')
         dataset = dataset.values
+        model = self.model
         for data in dataset:
-            words = data[1]
-            for word in words.split():
-                word_count[word] += 1
-        with open('../data/word_cloud.json', 'w') as f:
-            json.dump(word_count, f)
-
-    def tweet_pagerank(self):
-        # # words
-        # word_count = collections.defaultdict(int)
-        # dataset = pd.read_csv('../data/words_noun.csv')
-        # dataset = dataset.values
-        # for data in dataset:
-        #     words = data[1]
-        #     for word in words.split():
-        #         word_count[word] += 1
-        # key_words = ['原発', '事故', '避難', '放射能']
-        # # influencers
-        # influencer_count = collections.defaultdict(int)
-        # dataset = pd.read_csv('../data/influencers.csv')
-        # dataset = dataset.values
-        # # tweets similarity
-        with open('../data/text_dist.json', 'r') as f:
-            dataset = json.load(f)
-        for year, info in dataset.items():
-            dist, tids = info['dist'], info['tids']
-            length = len(tids)
-            graph = nx.DiGraph()
-            for i in range(length-1):
-                for j in range(i+1, length):
-                    graph.add_edge(i, j, weight=1 - dist[i][j])
-                    graph.add_edge(j, i, weight=1 - dist[i][j])
-            pr = nx.pagerank(graph)
-            print(year)
-            for key, val in pr.items():
-                print(key, val)
-        # calculate
+            words = data[1].split()
+            for word in words:
+                if word not in word_list:
+                    try:
+                        simi_words = model.wv.most_similar(positive=[word])
+                        word_list[word] = [word] +\
+                            [w[0] for w in simi_words[:3]]
+                    except:
+                        pass
+                else:
+                    continue
+        with open('../data/word_list.json', 'w') as f:
+            json.dump(word_list, f)
 
 
 class Graph():
     def __init__(self):
         pass
+
+    def coretweet_pattern(self):
+        '''
+        return information of tweets retweeted by the same users
+        tid: [{tid:count}]
+        '''
+        user_tid = collections.defaultdict(list)
+        tid_user = collections.defaultdict(list)
+        tid_tid = {}
+        dataset = pd.read_csv('../data/retweet.csv')
+        dataset = dataset.values
+        for data in dataset:
+            tid, dst = data[1], data[2]
+            user_tid[dst].append(tid)
+            tid_user[tid].append(dst)
+        for tid, user_list in tid_user.items():
+            tid_count = collections.defaultdict(int)
+            for user in user_list:
+                for ttid in user_tid[user]:
+                    tid_count[ttid] += 1
+            tid_tid[tid] = tid_count
+        # sort
+        result = {}
+        # for tid, tid_dict in tid_tid.items():
+        #     result[tid] = collections.OrderedDict(sorted(tid_dict.items(),
+        #                                                  key=itemgetter(1),
+        #                                                  reverse=True))
+        for tid, tid_dict in tid_tid.items():
+            result[tid] = sorted(tid_dict.items(), key=lambda x: x[1],
+                                 reverse=True)
+        with open('../data/coretweet_pattern.json', 'w') as f:
+            json.dump(result, f)
 
     def ego_network(self):
         with open('../data/coretweet_pattern.json', 'r') as f:
@@ -208,40 +227,6 @@ class Graph():
         with open('../data/ego_network.json', 'w') as f:
             json.dump(results, f)
 
-    def force_layout(self):
-        with open('../data/coretweet_pattern.json', 'r') as f:
-            dataset = json.load(f)
-        print(len(dataset))
-        nodes, edges = [], []
-        name_nid = {}
-        name_eid = {}
-        node_count, edge_count = 0, 0
-        for src_name, dst_info in dataset.items():
-            src_name = int(src_name)
-            if src_name not in name_nid:
-                name_nid[src_name] = node_count
-                nodes.append(dict(id=node_count, name=src_name,
-                                  size=dst_info[0][1]))
-                node_count += 1
-            for dst in dst_info:
-                dst_name = dst[0]
-                if dst_name not in name_nid:
-                    name_nid[dst_name] = node_count
-                    nodes.append(dict(id=node_count, name=dst_name,
-                                      size=dataset[str(dst_name)][0][1]))
-                    node_count += 1
-                edge_name1 = tuple([name_nid[src_name], name_nid[dst_name]])
-                edge_name2 = tuple([name_nid[dst_name], name_nid[src_name]])
-                if edge_name1 not in name_eid and edge_name2 not in name_eid\
-                        and src_name != dst_name:
-                    name_eid[edge_name1] = edge_count
-                    edges.append(dict(id=edge_count, source=name_nid[src_name],
-                                      target=name_nid[dst_name]))
-                    edge_count += 1
-        print(len(nodes), len(edges))
-        with open('../data/force_layout.json', 'w') as f:
-            json.dump(dict(nodes=nodes, edges=edges), f)
-
     def timeline(self):
         dataset = pd.read_csv('../data/retweet.csv')
         dataset = dataset.values
@@ -273,39 +258,7 @@ class Graph():
         with open('../data/timeline.json', 'w') as f:
             json.dump(results, f)
 
-    def coretweet_pattern(self):
-        '''
-        return
-        tid: [{tid:count}]
-        '''
-        user_tid = collections.defaultdict(list)
-        tid_user = collections.defaultdict(list)
-        tid_tid = {}
-        dataset = pd.read_csv('../data/retweet.csv')
-        dataset = dataset.values
-        for data in dataset:
-            tid, dst = data[1], data[2]
-            user_tid[dst].append(tid)
-            tid_user[tid].append(dst)
-        for tid, user_list in tid_user.items():
-            tid_count = collections.defaultdict(int)
-            for user in user_list:
-                for ttid in user_tid[user]:
-                    tid_count[ttid] += 1
-            tid_tid[tid] = tid_count
-        # sort
-        result = {}
-        # for tid, tid_dict in tid_tid.items():
-        #     result[tid] = collections.OrderedDict(sorted(tid_dict.items(),
-        #                                                  key=itemgetter(1),
-        #                                                  reverse=True))
-        for tid, tid_dict in tid_tid.items():
-            result[tid] = sorted(tid_dict.items(), key=lambda x: x[1],
-                                 reverse=True)
-        with open('../data/coretweet_pattern.json', 'w') as f:
-            json.dump(result, f)
-
-    def mds_layout(self):
+    def mds_layout1(self):
         seed = np.random.RandomState(seed=3)
         dataset = pd.read_csv('../data/tweet_text.csv')
         dataset = dataset.values
@@ -356,14 +309,90 @@ class Graph():
         with open('../data/mds_layout.json', 'w') as f:
             json.dump(jsonfile, f)
 
+    def mds_layout(self):
+        '''
+        return yearly node information
+        including: pos-x, pos-y, tid, noun, text, cotids
+        '''
+        seed = np.random.RandomState(seed=3)
+        dataset = pd.read_csv('../data/tweet_text.csv')
+        dataset = dataset.values
+        tid_words = {}
+        for data in dataset:
+            tid_words[str(data[0])] = dict(noun=data[1], text=data[2])
+        with open('../data/text_dist.json', 'r') as f:
+            text_dist = json.load(f)
+        with open('../data/coretweet_pattern.json', 'r') as f:
+            tid_tids = json.load(f)
+        year_nodes = {}
+        for year, dist_info in text_dist.items():
+            dist, tid_list = dist_info['dist'], dist_info['tids']
+            mds = manifold.MDS(n_components=2, max_iter=3000, eps=1e-12,
+                               dissimilarity='precomputed', random_state=seed)
+            positions = mds.fit_transform(dist)
+            nodes = []
+            for i, pos in enumerate(positions):
+                temp_dists = dist[i]
+                threshold = 0.3
+                neigh = []
+                for index in range(len(temp_dists)):
+                    if temp_dists[index] <= threshold:
+                        neigh.append(tid_list[index])
+                tid = tid_list[i]
+                noun = tid_words[tid]
+                noun = tid_words[tid]['noun'].split()
+                text = tid_words[tid]['text']
+                cotids = [[str(tweet[0]), tweet[1]]
+                          for tweet in tid_tids[tid]]
+                nodes.append(dict(x=pos[0], y=pos[1], tid=tid, year=year,
+                                  noun=noun, text=text, cotids=cotids))
+            year_nodes[year] = nodes
+        with open('../data/mds_layout.json', 'w') as f:
+            json.dump(year_nodes, f)
+
+    def layout_graph(self):
+        '''
+        return graph data for visualization
+        '''
+        jsonfile = {}
+        dataset = pd.read_csv('../data/tweet_text.csv')
+        dataset = dataset.values
+        tid_words = {}
+        for data in dataset:
+            tid_words[str(data[0])] = dict(noun=data[1], text=data[2])
+        with open('../data/mds_layout.json', 'r') as f:
+            year_nodes = json.load(f)
+        all_nodes = []
+        for year, nodelist in year_nodes.items():
+            for nodedict in nodelist:
+                all_nodes.append(nodedict)
+        # add tid text information
+        tid_text = {}
+        for tid, worddict in tid_words.items():
+            tid_text[str(tid)] = worddict['text']
+        # add timeline information
+        with open('../data/timeline.json', 'r') as f:
+            tid_time = json.load(f)
+        # add ego network information
+        with open('../data/ego_network.json', 'r') as f:
+            ego_network = json.load(f)
+        # add tag extension
+        with open('../data/word_list.json', 'r') as f:
+            word_list = json.load(f)
+        jsonfile = {'mds': all_nodes, 'ego': ego_network, 'tag': word_list,
+                    'tidtime': tid_time, 'tidtext': tid_text}
+        with open('../data/layout.json', 'w') as f:
+            json.dump(jsonfile, f)
+
 
 if __name__ == '__main__':
     graph = Graph()
-    graph.ego_network()
-    # graph.force_layout()
+    # graph.ego_network()
     # graph.mds_layout()
     # graph.timeline()
     # graph.coretweet_pattern()
+    graph.layout_graph()
     # nlp = Nlp()
     # nlp.tweet_pagerank()
     # nlp.similarity_dist()
+    # nlp.word_list()

@@ -4,7 +4,6 @@ import * as d3 from 'd3'
 export default function drawEgolayout(graph) {
   document.getElementById('egolayout').innerHTML = ''
   const margin = {top: 30, right: 120, bottom: 10, left:30},
-    padHeight = 20,
     width = 400,
     height = 400,
     nodes = graph.nodes,
@@ -27,7 +26,7 @@ export default function drawEgolayout(graph) {
   const group = svg.append('g')
     .attr('id', 'ego-g')
     .attr('transform', `translate(${margin.left}, ${margin.top})`)
-  const link = group.append('g')
+  group.append('g')
     .attr('class', 'ego-edges')
     .selectAll('.egoline')
     .data(edges)
@@ -36,7 +35,7 @@ export default function drawEgolayout(graph) {
     .attr('y1', d => yScale(d.src.y))
     .attr('x2', d => xScale(d.dst.x))
     .attr('y2', d => yScale(d.dst.y))
-  const node = group.append('g')
+  group.append('g')
     .attr('class', 'ego-nodes')
     .selectAll('.ego-nodes')
     .data(nodes)
