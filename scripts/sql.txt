@@ -72,3 +72,34 @@ GROUP BY
 ORDER BY
   retweeted_count
 DESC
+
+
+
+
+-- tweet basic:
+SELECT
+  retweeted_status.user.id AS influencer,
+  retweeted_status.id AS tid,
+  text AS text,
+  COUNT(*) AS count
+FROM
+  `vizlab-crest.postcrisis_PQX.tweets`
+WHERE
+  retweeted_status.id IS NOT NULL
+GROUP BY
+  retweeted_status.user.id, retweeted_status.id, text
+
+
+-- retweet_info:
+SELECT
+  A.retweeted_status.id AS tid,
+  EXTRACT(DATE FROM A.created_at) AS date,
+  A.retweeted_status.user.id AS influencer,
+  A.user.id AS user,
+  A.text AS text,
+  B.count AS count
+FROM
+  `vizlab-crest.postcrisis_PQX.tweets` AS A,
+  `vizlab-crest.guanyq.tweet_basic` AS B
+WHERE
+  B.count > 200 AND B.tid = A.retweeted_status.id

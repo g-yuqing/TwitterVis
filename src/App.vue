@@ -1,42 +1,21 @@
 <template>
   <div id="app">
-    <div id="keyword-bar">
-      <el-tag
-        :key="tag"
-        v-for="tag in dynamicTags"
-        closable
-        :disable-transitions="false"
-        @close="handleClose(tag)">
-        {{tag}}
-      </el-tag>
-      <el-input
-        class="input-new-tag"
-        v-if="inputVisible"
-        v-model="inputValue"
-        ref="saveTagInput"
-        size="small"
-        @keyup.enter.native="handleInputConfirm"
-        @blur="handleInputConfirm">
-      </el-input>
-      <el-button v-else class="button-new-tag" size="small" @click="showInput">+ New Tag</el-button>
-    </div>
-    <layout></layout>
+    <!-- <tsneview></tsneview> -->
+    <textview></textview>
   </div>
 </template>
 
 <script>
-import Layout from './components/LayoutView'
-
+import TsneView from './components/TsneView'
+import TextView from './components/TextView'
 
 export default {
   name: 'App',
   components: {
-    layout: Layout,
+    tsneview: TsneView,
+    textview: TextView,
   },
   data: () => ({
-    dynamicTags: ['原発', '事故', '避難', '放射能'],
-    inputVisible: false,
-    inputValue: ''
   }),
   mounted() {
     this.loadData()
@@ -46,39 +25,17 @@ export default {
       })
   },
   watch: {
-    dynamicTags(val) {
-      this.eventHub.$emit('updateLayoutScene', this.dynamicTags)
-    }
   },
   methods: {
     async loadData() {
-      const res = await fetch('../static/layout.json')
+      const res = await fetch('../static/current/nodes.json')
       const graphData = await res.json()
       return graphData
     },
     // layout methods
     drawLayout() {
-      // document.getElementById('layout').innerHTML = ''
-      this.eventHub.$emit('initLayoutScene', this.graphData, this.dynamicTags)
+      this.eventHub.$emit('initTsnelayout', this.graphData)
     },
-    // tag methods
-    handleClose(tag) {
-      this.dynamicTags.splice(this.dynamicTags.indexOf(tag), 1)
-    },
-    showInput() {
-      this.inputVisible = true;
-      this.$nextTick(_ => {
-      this.$refs.saveTagInput.$refs.input.focus()
-      })
-    },
-    handleInputConfirm() {
-      let inputValue = this.inputValue
-      if (inputValue) {
-        this.dynamicTags.push(inputValue)
-      }
-      this.inputVisible = false
-      this.inputValue = ''
-    }
   }
 }
 </script>
@@ -91,7 +48,7 @@ export default {
   color: #2c3e50;
 }
 .el-tag + .el-tag {
-  margin-left: 10px;
+  margin-left: 7px;
 }
 .button-new-tag {
   margin-left: 10px;

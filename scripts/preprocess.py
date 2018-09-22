@@ -1,67 +1,421 @@
 import os.path
 import json
+import math
 import logging
 import collections
-# from operator import itemgetter
 import datetime
 import numpy as np
 import pandas as pd
+import unicodedata
 import MeCab
-from gensim.models import word2vec
+import phate
+from gensim.models import word2vec, KeyedVectors
+from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 from sklearn import manifold
+from sklearn.cluster import DBSCAN, KMeans
 import networkx as nx
+from operator import itemgetter
 
 
-class Nlp():
+class NLProcessor():
     def __init__(self):
-        if not os.path.exists('../data/model/wiki.model'):
-            self.mode_training()
-        else:
-            print('load model')
-            self.model = word2vec.Word2Vec.load('../data/model/wiki.model')
+        pass
+        # print('loading model')
+        # self.model = KeyedVectors.load_word2vec_format(
+        #     '../data/model/model.vec')
+        # self.model = word2vec.Word2Vec.load('../data/model_dep/wiki.model')
 
-    def mode_training(self):
+    def word_to_vec_model(self):
         logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s',
                             level=logging.INFO)
         sentences = word2vec.Text8Corpus('../data/model/wiki_wakati.txt')
         model = word2vec.Word2Vec(sentences, size=200, min_count=20, window=15)
         model.save('../data/model/wiki.model')
 
-    def year_retweet(self):
-        '''
-        return yearly tweet information
-        '''
-        print('preprocess data')
-        tid_text = {}  # tid: content
-        year_tweet = collections.defaultdict(list)  # classify tweet by year
-        year_tid = collections.defaultdict(list)
-        # query tweet_text file, retreive tid and text
-        dataset = pd.read_csv('../data/tweet_text.csv')
-        dataset = dataset.values
+    def doc_to_vec_model(self):
+        def is_japanese(string):
+            for ch in string:
+                name = unicodedata.name(ch)
+                if "CJK UNIFIED" in name \
+                        or "HIRAGANA" in name or "KATAKANA" in name:
+                    return True
+            return False
+
+        def collect_words(text):
+            out_words = []
+            tagger = MeCab.Tagger('')
+            tagger.parse('')
+            # remove 'RT ...:'
+            if 'RT' in text:
+                index = text.find(':')
+                text = text[index+1:]
+            node = tagger.parseToNode(text)
+            while node:
+                word_type = node.feature.split(",")[0]
+                if word_type in ['名詞', '動詞', '形容詞']:
+                    word = node.surface
+                    if is_japanese(word):
+                        out_words.append(word)
+                node = node.next
+            return out_words
+        with open('../data/current/tweet_info.json', 'r') as f:
+            tid_info = json.load(f)
+        training_docs, index = [], 0
+        for tid, info in tid_info.items():
+            training_docs.append(
+                TaggedDocument(
+                    words=collect_words(info['text']),
+                    tags=[str(index)]))
+            index += 1
+        model = Doc2Vec(documents=training_docs, min_count=1, dm=0)
+        model.save('../data/model/tweet.model')
+
+    def process_csv(self):
+        def is_japanese(string):
+            for ch in string:
+                name = unicodedata.name(ch)
+                if "CJK UNIFIED" in name \
+                        or "HIRAGANA" in name or "KATAKANA" in name:
+                    return True
+            return False
+        mt = MeCab.Tagger()
+        mt.parse('')
+        filepath = '../data/current/retweet_info.csv'
+        dataset = pd.read_csv(filepath).values  # tid,date,infl,user,text,count
+        tid_info = collections.defaultdict(dict)
+        print(len(dataset))
         for data in dataset:
-            tid_text[str(data[0])] = dict(words=data[1], text=data[2])
-        # # query retweet file, get retweeted time
-        dataset = pd.read_csv('../data/retweet.csv')
-        dataset = dataset.values
+            # for json dump
+            tid, author, text, count = str(data[0]), int(data[2]),\
+                 str(data[4]), int(data[5])
+            if tid in tid_info:
+                continue
+            tid_info[tid]['author'] = author
+            tid_info[tid]['count'] = count
+            tid_info[tid]['rtd'] = collections.defaultdict(int)
+            tid_info[tid]['text'] = text
+            tid_info[tid]['words'] = []
+            if text[:2] == 'RT':
+                pos = text.find(':')
+                text = text[pos+1:]
+            node = mt.parseToNode(text)
+            while node:
+                fields = node.feature.split(',')
+                if fields[0] == '名詞' and fields[2] == '一般' and\
+                        fields[1] != '代名詞' and fields[1] != '連体化' and\
+                        fields[1] != '非自立':
+                    word = node.surface
+                    if is_japanese(word):
+                        tid_info[tid]['words'].append(word)
+                else:
+                    pass
+                node = node.next
         for data in dataset:
-            date, tid = data[0], str(data[1])
-            if tid in tid_text:
-                year = date.split('-')[0]
-                if tid not in year_tid[year]:
-                    year_tid[year].append(tid)
-                    words, text = tid_text[tid]['words'], tid_text[tid]['text']
-                    year_tweet[year].append(dict(tid=tid, words=words,
-                                                 text=text))
-        return year_tweet
+            tid, date = str(data[0]), str(data[1])
+            tid_info[tid]['rtd'][date] += 1
+        print(len(tid_info))
+        # return tweet_id
+        with open('../data/current/tweet_info.json', 'w') as f:
+            json.dump(tid_info, f)
+
+    def text_process(self):
+        def cos_sim(vec1, vec2):
+            return np.dot(vec1, vec2) / (np.linalg.norm(vec1) *
+                                         np.linalg.norm(vec2))
+        with open('../data/current/tweet_info.json', 'r') as f:
+            tid_info = json.load(f)
+        unknown_list = collections.defaultdict(int)
+        topic_vec_list = []
+        topic_word_list = []
+        tid_list = []
+        for tid, info in tid_info.items():
+            words = info['words']
+            sum_vec, word_count = np.zeros(200), 0
+            for word in words:
+                try:
+                    sum_vec += self.model[word]
+                    word_count += 1
+                except:
+                    unknown_list[word] += 1
+            if word_count == 0:
+                topic_vec_list.append(sum_vec)
+            else:
+                topic_vec_list.append(sum_vec/word_count)
+            topic_word_list.append(words)
+            tid_list.append(tid)
+        length = len(topic_vec_list)
+        dists = [[0]*length for _ in range(length)]
+        for i in range(length-1):
+            for j in range(i+1, length):
+                vec1, vec2 = topic_vec_list[i], topic_vec_list[j]
+                if not np.any(vec1) and not np.any(vec2):
+                    dists[i][j] = dists[j][i] = 0
+                elif np.any(vec1) and not np.any(vec2) or\
+                        (not np.any(vec1) and np.any(vec2)):
+                    dists[i][j] = dists[j][i] = 1
+                else:
+                    dists[i][j] = dists[j][i] = 1 - cos_sim(vec1, vec2)
+        dists = np.array(dists)
+        db = DBSCAN(eps=0.3, min_samples=6, metric='precomputed').fit(dists)
+        labels = db.labels_
+        print(len(labels))
+        # topic_vec_list = np.array(topic_vec_list)
+        # tsne = manifold.TSNE(n_components=2, random_state=0)
+        # positions = tsne.fit_transform(topic_vec_list)
+        # topic_vec_list = np.array(topic_vec_list)
+        # pl = phate.PHATE(n_components=2)
+        # positions = pl.fit_transform(topic_vec_list)
+        clustering_tid = collections.defaultdict(list)
+        assert len(labels) == len(tid_list)
+        for tid, cluster in zip(tid_list, labels):
+            clustering_tid[str(cluster)].append(tid)
+        with open('../data/current/clustering_tid.json', 'w') as f:
+            json.dump(clustering_tid, f)
+
+    def text_layout(self):
+        with open('../data/current/clustering_tid.json', 'r') as f:
+            clustering_tid = json.load(f)
+        with open('../data/current/tweet_info.json', 'r') as f:
+            tid_info = json.load(f)
+        tid_list = clustering_tid['0']+clustering_tid['-1']
+        topic_vec_list = []
+        for tid in tid_list:
+            info = tid_info[str(tid)]
+            words = info['words']
+            sum_vec, word_count = np.zeros(200), 0
+            for word in words:
+                try:
+                    sum_vec += self.model[word]
+                    word_count += 1
+                except:
+                    pass
+            if word_count == 0:
+                topic_vec_list.append(sum_vec)
+            else:
+                topic_vec_list.append(sum_vec/word_count)
+        topic_vec_list = np.array(topic_vec_list)
+        pl = phate.PHATE(n_components=2)
+        positions = pl.fit_transform(topic_vec_list)
+        nodes = []
+        for pos in positions:
+            x_pos, y_pos = float(pos[0]), float(pos[1])
+            nodes.append(dict(x=x_pos, y=y_pos))
+        with open('../data/current/text_layout.json', 'w') as f:
+            json.dump(dict(nodes=nodes), f)
+
+    def word_corpus(self):
+        def cos_sim(vec1, vec2):
+            return np.dot(vec1, vec2) / (np.linalg.norm(vec1) *
+                                         np.linalg.norm(vec2))
+        with open('../data/current/clustering_tid.json', 'r') as f:
+            clustering_tid = json.load(f)
+        with open('../data/current/tweet_info.json', 'r') as f:
+            tid_info = json.load(f)
+        tid_list = clustering_tid['0']+clustering_tid['-1']
+        word_id = {}
+        word_list = []
+        wid = 0
+        for tid in tid_list:
+            info = tid_info[str(tid)]
+            words = info['words']
+            for word in words:
+                if word not in word_id:
+                    word_id[word] = wid
+                    word_list.append(word)
+                    wid += 1
+        # combine similiar words
+        sim_thres = 0.6
+        length = len(word_list)
+        for i in range(length-1):
+            for j in range(i+1, length):
+                try:
+                    w1, w2 = word_list[i], word_list[j]
+                    vec1 = self.model[w1]
+                    vec2 = self.model[w2]
+                    if cos_sim(vec1, vec2) >= sim_thres:
+                        wid = min(word_id[w1], word_id[w2])
+                        word_id[w1] = word_id[w2] = wid
+                except:
+                    pass
+        # pagerank
+        G = nx.DiGraph()
+        for tid in tid_list:
+            info = tid_info[str(tid)]
+            words = info['words']
+            length = len(words)
+            if length > 1:
+                for i in range(length-1):
+                    for j in range(i+1, length):
+                        w1, w2 = words[i], words[j]
+                        wid1, wid2 = word_id[w1], word_id[w2]
+                        G.add_edge(wid1, wid2)
+        word_score = {}
+        pr = nx.pagerank(G)
+        for i, score in pr.items():
+            word = word_list[i]
+            word_score[word] = score
+        with open('../data/current/temp.json', 'w') as f:
+            json.dump(word_score, f)
+
+    def snapshot(self):
+        def cos_sim(vec1, vec2):
+            return np.dot(vec1, vec2) / (np.linalg.norm(vec1) *
+                                         np.linalg.norm(vec2))
+        with open('../data/current/tweet_info.json', 'r') as f:
+            tid_info = json.load(f)
+        unknown_list = collections.defaultdict(int)
+        # topic = ['放射能', '環境', '避難', '政府', '学会', '経済', '食品']
+        topic = ['危機管理', '関東地方', '風評被害', '放射性物質', '子どもたち',
+                 'この国', '無量大数', '編集長', '基準値', 'ツイート',
+                 '廃炉', '安倍首相', 'ミリシーベルト', 'メルトダウン']
+
+        def func():
+            temp = {}
+            for key in topic:
+                temp[key] = 0
+            return temp
+        tpc_vecs = [self.model[tpc] for tpc in topic]
+        date_tpc = collections.defaultdict(func)
+        sim_thres = 0.5
+        for tid, info in tid_info.items():
+            words = info['words']
+            temp_topic = []
+            for i, tpc in enumerate(topic):
+                vec1 = tpc_vecs[i]
+                for word in words:
+                    try:
+                        vec2 = self.model[word]
+                        temp_sim = cos_sim(vec1, vec2)
+                        if temp_sim > sim_thres:
+                            temp_topic.append(tpc)
+                            break
+                    except:
+                        unknown_list[word] += 1
+            date_count = info['rtd']
+            for date, count in date_count.items():
+                for tt in temp_topic:
+                    date_tpc[date][tt] += count
+        # snapshot matrix
+        graph = []
+        date_list = []
+        timestep, overlay = 31, 28
+        movestep = timestep - overlay
+        start_date = datetime.date(2011, 3, 1)
+        end_date = datetime.date(2016, 12, 1)
+        current_date = start_date
+        while current_date < end_date:
+            temp_vec = np.array([0]*len(topic))
+            for i in range(timestep):
+                temp_date = current_date + datetime.timedelta(days=i)
+                temp_date_str = temp_date.strftime('%Y-%m-%d')
+                try:
+                    temp_vec += np.array(
+                        list(date_tpc[temp_date_str].values()))
+                except:
+                    pass
+            # normalize
+            if np.any(temp_vec):
+                norm1 = temp_vec / np.linalg.norm(temp_vec)
+            else:
+                norm1 = temp_vec
+            graph.append(norm1)
+            date_list.append(current_date.strftime('%Y-%m-%d'))
+            current_date += datetime.timedelta(days=movestep)
+        # tsne layout
+        graph = np.array(graph)
+        tsne = manifold.TSNE(n_components=2, random_state=0)
+        positions = tsne.fit_transform(graph)
+        # # phate layout
+        # graph = np.array(graph)
+        # pl = phate.PHATE(n_components=2)
+        # positions = pl.fit_transform(graph)
+        nodes = []
+        for pos, g, d in zip(positions, graph, date_list):
+            x_pos, y_pos = float(pos[0]), float(pos[1])
+            nodes.append(dict(x=x_pos, y=y_pos, d=d, c=g.tolist()))
+        links = []
+        nl = len(nodes)
+        for i in range(nl-1):
+            links.append(dict(src=nodes[i], dst=nodes[i+1]))
+        with open('../data/current/nodes.json', 'w') as f:
+            json.dump(dict(nodes=nodes, links=links), f)
+
+    def snapshot_dep(self):
+        def cos_sim(vec1, vec2):
+            return np.dot(vec1, vec2) / (np.linalg.norm(vec1) *
+                                         np.linalg.norm(vec2))
+        with open('../data/current/tweet_info.json', 'r') as f:
+            tid_info = json.load(f)
+        topic = ['放射能', '環境', '避難', '政府', '学会', '安全', '反原発']
+        tpc_vecs = [self.model.wv[tpc] for tpc in topic]
+        date_tpc = collections.defaultdict(lambda: {'放射能': 0, '環境': 0,
+                                                    '避難': 0, '政府': 0,
+                                                    '学会': 0, '安全': 0,
+                                                    '反原発': 0})
+        # create snapshots
+        sim_thres = 0.5
+        for tid, info in tid_info.items():
+            words = info['words']
+            temp_topic = []
+            for i, tpc in enumerate(topic):
+                vec1 = tpc_vecs[i]
+                for word in words:
+                    try:
+                        vec2 = self.model.wv[word]
+                        temp_sim = cos_sim(vec1, vec2)
+                        if temp_sim > sim_thres:
+                            temp_topic.append(tpc)
+                            break
+                    except:
+                        pass
+            date_count = info['rtd']
+            for date, count in date_count.items():
+                for tt in temp_topic:
+                    date_tpc[date][tt] += count
+        # snapshot matrix
+        graph, sizelist = [], []
+        timestep, overlay = 31, 28
+        movestep = timestep - overlay
+        start_date = datetime.date(2011, 3, 1)
+        end_date = datetime.date(2016, 12, 1)
+        current_date = start_date
+        while current_date < end_date:
+            temp_vec = np.array([0]*len(topic))
+            for i in range(timestep):
+                temp_date = current_date + datetime.timedelta(days=i)
+                temp_date_str = temp_date.strftime('%Y-%m-%d')
+                try:
+                    temp_vec += np.array(
+                        list(date_tpc[temp_date_str].values()))
+                except:
+                    pass
+            sizelist.append(np.sum(temp_vec))
+            # normalize
+            if np.any(temp_vec):
+                norm1 = temp_vec / np.linalg.norm(temp_vec)
+            else:
+                norm1 = temp_vec
+            graph.append(norm1)
+            current_date += datetime.timedelta(days=movestep)
+        # tsne layout
+        sizelist = np.array(sizelist)
+        sizelist = sizelist / np.linalg.norm(sizelist)
+        graph = np.array(graph)
+        tsne = manifold.TSNE(n_components=2, random_state=0)
+        positions = tsne.fit_transform(graph)
+        assert len(positions) == len(sizelist)
+        nodes = []
+        for pos, size in zip(positions, sizelist):
+            x_pos, y_pos = float(pos[0]), float(pos[1])
+            nodes.append(dict(x=x_pos, y=y_pos, s=size))
+        links = []
+        nl = len(nodes)
+        for i in range(nl-1):
+            links.append(dict(src=nodes[i], dst=nodes[i+1]))
+        with open('../data/current/nodes.json', 'w') as f:
+            json.dump(dict(nodes=nodes, links=links), f)
 
     def similarity_dist(self):
-        '''
-        return cosine dist of yearly tweet data
-        '''
-        print('calculate similarity dist')
-        mt = MeCab.Tagger('')
-        mt.parse('')
-
         def get_vector_words(words):
             sum_vec = np.zeros(200)
             word_count = 0
@@ -73,326 +427,193 @@ class Nlp():
                     pass
             return sum_vec / word_count
 
-        def get_vector(text):
-            sum_vec = np.zeros(200)
-            word_count = 0
-            node = mt.parseToNode(text)
-            while node:
-                fields = node.feature.split(',')
-                if fields[0] == '名詞' or fields[0] == '動詞' or\
-                        fields[0] == '形容詞':
-                    try:
-                        sum_vec += self.model.wv[node.surface]
-                        word_count += 1
-                    except:
-                        pass
-                node = node.next
-            return sum_vec / word_count
-
         def cos_sim(vec1, vec2):
             return np.dot(vec1, vec2) / (np.linalg.norm(vec1) *
                                          np.linalg.norm(vec2))
-
-        year_tweet = self.year_retweet()
-        year_cosdist = {}
-        for year, tweet_list in year_tweet.items():
-            tid_list = [t['tid'] for t in tweet_list]
-            length = len(tweet_list)
-            dist_mat = [[0] * length for _ in range(length)]
-            for i in range(length-1):
-                for j in range(i+1, length):
-                    tweet1, tweet2 = tweet_list[i], tweet_list[j]
-                    text1, text2 = tweet1['text'], tweet2['text']
-                    vec1, vec2 = get_vector(text1), get_vector(text2)
-                    dist_mat[i][j] = dist_mat[j][i] = 1 - cos_sim(vec1, vec2)
-            year_cosdist[year] = dict(dist=dist_mat, tids=tid_list)
-        with open('../data/text_dist.json', 'w') as f:
-            json.dump(year_cosdist, f)
-
-    def word_list(self):
-        '''
-        return keyword and related words
-        '''
-        word_list = {}
-        dataset = pd.read_csv('../data/words_noun.csv')
-        dataset = dataset.values
-        model = self.model
-        for data in dataset:
-            words = data[1].split()
-            for word in words:
-                if word not in word_list:
-                    try:
-                        simi_words = model.wv.most_similar(positive=[word])
-                        word_list[word] = [word] +\
-                            [w[0] for w in simi_words[:3]]
-                    except:
-                        pass
-                else:
-                    continue
-        with open('../data/word_list.json', 'w') as f:
-            json.dump(word_list, f)
+        # convert words to vector
+        # load file
+        with open('../data/current/tweet_info.json', 'r') as f:
+            dataset = json.load(f)
+        tid_list, vec_list = [], []
+        for tid, info in dataset.items():
+            words = info['words']
+            tid_list.append(tid)
+            vec_list.append(get_vector_words(words))
+        assert len(tid_list) == len(vec_list)
+        # calculate distances
+        length = len(vec_list)
+        print(length)
+        dist_mat = [[0]*length for _ in range(length)]
+        for i in range(length-1):
+            for j in range(i+1, length):
+                dist_mat[i][j] = dist_mat[j][i] = 1 - cos_sim(vec_list[i],
+                                                              vec_list[j])
+        with open('../data/current/similarity_dist.json', 'w') as f:
+            json.dump(dict(dist=dist_mat, tid=tid_list), f)
 
 
 class Graph():
     def __init__(self):
         pass
 
-    def coretweet_pattern(self):
+    def tsne_layout(self):
         '''
-        return information of tweets retweeted by the same users
-        tid: [{tid:count}]
+        output nodes poistion only based on tsne algorithm
         '''
-        user_tid = collections.defaultdict(list)
-        tid_user = collections.defaultdict(list)
-        tid_tid = {}
-        dataset = pd.read_csv('../data/retweet.csv')
-        dataset = dataset.values
-        for data in dataset:
-            tid, dst = data[1], data[2]
-            user_tid[dst].append(tid)
-            tid_user[tid].append(dst)
-        for tid, user_list in tid_user.items():
-            tid_count = collections.defaultdict(int)
-            for user in user_list:
-                for ttid in user_tid[user]:
-                    tid_count[ttid] += 1
-            tid_tid[tid] = tid_count
-        # sort
-        result = {}
-        # for tid, tid_dict in tid_tid.items():
-        #     result[tid] = collections.OrderedDict(sorted(tid_dict.items(),
-        #                                                  key=itemgetter(1),
-        #                                                  reverse=True))
-        for tid, tid_dict in tid_tid.items():
-            result[tid] = sorted(tid_dict.items(), key=lambda x: x[1],
-                                 reverse=True)
-        with open('../data/coretweet_pattern.json', 'w') as f:
-            json.dump(result, f)
-
-    def ego_network(self):
-        with open('../data/coretweet_pattern.json', 'r') as f:
+        with open('../data/current/similarity_dist.json', 'r') as f:
             dataset = json.load(f)
-        results = {}
-        for src_name, dst_info in dataset.items():
-            src_name = int(src_name)
-            name_nid = {}
-            name_size = {}
-            edge_weight = {}
-            name_list = [d[0] for d in dst_info]
-            for i, dst in enumerate(dst_info):
-                if i == 0:
-                    name, size = dst[0], dst[1]
-                    name_size[name] = size
-                    name_nid[name] = i
-                else:
-                    dst_name, weight = dst[0], dst[1]
-                    edge_weight[tuple([src_name, dst_name])] = weight
-                    name_nid[dst_name] = i
-            # other nodes (except ego node)
-            for dst in dst_info[1:]:
-                name = dst[0]
-                for i, temp_dst in enumerate(dataset[str(name)]):
-                    if i == 0:
-                        temp_name, size = temp_dst[0], temp_dst[1]
-                        assert name == temp_name
-                        name_size[temp_name] = size
-                    else:
-                        dst_name, weight = temp_dst[0], temp_dst[1]
-                        if dst_name in name_nid:
-                            if tuple([name, dst_name]) not in edge_weight or\
-                                    tuple([dst_name, name]) not in edge_weight:
-                                edge_weight[tuple([name, dst_name])] = weight
-            graph = nx.Graph()
-            res_nodes, temp_edges = [], []
-            for edge, weight in edge_weight.items():
-                src, dst = name_nid[edge[0]], name_nid[edge[1]]
-                temp_edges.append(dict(source=src, target=dst, value=weight))
-                graph.add_edge(src, dst, weight=weight)
-            positions = nx.spring_layout(graph)
-            for i, pos in positions.items():
-                name = name_list[i]
-                assert i == name_nid[name]
-                size = name_size[name]
-                res_nodes.append(dict(id=i, x=pos[0], y=pos[1], size=size,
-                                      degree=len(dst_info)-1))
-            res_edges = []
-            for edge in temp_edges:
-                si, ti, val = edge['source'], edge['target'], edge['value']
-                x1, y1 = positions[si][0], positions[si][1]
-                src = dict(x=x1, y=y1)
-                x2, y2 = positions[ti][0], positions[ti][1]
-                dst = dict(x=x2, y=y2)
-                res_edges.append(dict(src=src, dst=dst, value=val))
-            results[src_name] = dict(nodes=res_nodes, edges=res_edges)
-        with open('../data/ego_network.json', 'w') as f:
-            json.dump(results, f)
+            dist_mat = dataset['dist']
+            tid_list = dataset['tid']
+        assert len(dist_mat) == len(tid_list)
+        tsne = manifold.TSNE(n_components=2, random_state=0)
+        positions = tsne.fit_transform(dist_mat)
+        print(len(positions))
+        print(positions[0])
+        nodes_info = []
+        for index, pos in enumerate(positions):
+            tid = int(tid_list[index])
+            x_pos, y_pos = float(pos[0]), float(pos[1])
+            nodes_info.append(dict(tid=tid, x=x_pos, y=y_pos))
+        with open('../data/current/nodes_position.json', 'w') as f:
+            json.dump(dict(nodes=nodes_info), f)
 
-    def timeline(self):
-        dataset = pd.read_csv('../data/retweet.csv')
-        dataset = dataset.values
-        tid_times = collections.defaultdict(list)
-        for data in dataset:
-            tid_times[data[1]].append(data[0])
-        # sort tid_times
-        temp_sorted = {}
-        for tid, time_list in tid_times.items():
-            temp_sorted[tid] = sorted(time_list, key=lambda x:
-                                      datetime.datetime.strptime(x,
-                                                                 '%Y-%m-%d'))
-        # count
-        results = collections.defaultdict(list)
-        for tid, time_list in temp_sorted.items():
-            # date_count = collections.defaultdict(int)
-            date_count = {}
-            min_date = datetime.datetime.strptime(time_list[0], '%Y-%m-%d')
-            max_date = datetime.datetime.strptime(time_list[-1], '%Y-%m-%d')
-            cur_date = min_date
-            step = datetime.timedelta(days=1)
-            while cur_date <= max_date:
-                date_count[cur_date.strftime('%Y-%m-%d')] = 0
-                cur_date += step
-            for time in time_list:
-                date_count[time] += 1
-            for time, count in date_count.items():
-                results[tid].append(dict(date=time, count=count))
-        with open('../data/timeline.json', 'w') as f:
-            json.dump(results, f)
-
-    def mds_layout1(self):
-        seed = np.random.RandomState(seed=3)
-        dataset = pd.read_csv('../data/tweet_text.csv')
-        dataset = dataset.values
-        tid_words = {}
-        for data in dataset:
-            tid_words[str(data[0])] = dict(noun=data[1], text=data[2])
-        with open('../data/text_dist.json', 'r') as f:
+    def process_clustering(self):
+        with open('../data/current/nodes_rtdate.json', 'r') as f:
             dataset = json.load(f)
-        with open('../data/coretweet_pattern.json', 'r') as f:
-            tid_tids = json.load(f)
-        year_nodes = {}
-        for year, dist_info in dataset.items():
-            dist, tid_list = dist_info['dist'], dist_info['tids']
-            mds = manifold.MDS(n_components=2, max_iter=3000, eps=1e-12,
-                               dissimilarity='precomputed', random_state=seed)
-            positions = mds.fit_transform(dist)
-            nodes = []
-            for i, p in enumerate(positions):
-                # get neighbours
-                temp_dists = dist[i]
-                threshold = 0.3
-                neigh = []
-                for index in range(len(temp_dists)):
-                    if temp_dists[index] <= threshold:
-                        neigh.append(tid_list[index])
-                tid = tid_list[i]
-                noun = tid_words[tid]['noun'].split()
-                text = tid_words[tid]['text']
-                cotids = [[str(tweet[0]), tweet[1]]
-                          for tweet in tid_tids[tid]]
-                nodes.append(dict(x=p[0], y=p[1], tid=tid,
-                                  noun=noun, text=text, neigh=neigh,
-                                  cotids=cotids))
-            year_nodes[year] = nodes
-        all_nodes = []
-        for year, nodelist in year_nodes.items():
-            for nodedict in nodelist:
-                nodedict['year'] = year
-                all_nodes.append(nodedict)
-        tid_text = {}
-        for tid, worddict in tid_words.items():
-            tid_text[str(tid)] = worddict['text']
-        # add timeline information
-        with open('../data/timeline.json', 'r') as f:
-            tid_time = json.load(f)
-        jsonfile = {'data': all_nodes, 'tidtext': tid_text,
-                    'tidtime': tid_time}
-        with open('../data/mds_layout.json', 'w') as f:
-            json.dump(jsonfile, f)
+        nodes = dataset['nodes']
+        positions = []
+        for node in nodes:
+            positions.append([node['x'], node['y']])
+        labels = DBSCAN(eps=8, min_samples=100).fit_predict(positions)
+        assert len(labels) == len(nodes)
+        for i, node in enumerate(nodes):
+            node['cluster'] = int(labels[i])
+        with open('../data/current/nodes_clustering.json', 'w') as f:
+            json.dump(dict(nodes=nodes), f)
 
-    def mds_layout(self):
-        '''
-        return yearly node information
-        including: pos-x, pos-y, tid, noun, text, cotids
-        '''
-        seed = np.random.RandomState(seed=3)
-        dataset = pd.read_csv('../data/tweet_text.csv')
+    def process_retweet_info(self):
+        dataset = pd.read_csv('../data/current/retweet_info.csv')
         dataset = dataset.values
-        tid_words = {}
+        # count monthly retweet info
+        # 2011 2012 2013 | 2014 2015 2016 | 2017
+        # (1 *) 12 * 3   | (3 *) 4 * 3    | (6 *) 1 = 36+12+1 = 49
+        # each month     | each quarter   | half year
+        tid_dateinfo = collections.defaultdict(lambda: [0]*49)
         for data in dataset:
-            tid_words[str(data[0])] = dict(noun=data[1], text=data[2])
-        with open('../data/text_dist.json', 'r') as f:
-            text_dist = json.load(f)
-        with open('../data/coretweet_pattern.json', 'r') as f:
-            tid_tids = json.load(f)
-        year_nodes = {}
-        for year, dist_info in text_dist.items():
-            dist, tid_list = dist_info['dist'], dist_info['tids']
-            mds = manifold.MDS(n_components=2, max_iter=3000, eps=1e-12,
-                               dissimilarity='precomputed', random_state=seed)
-            positions = mds.fit_transform(dist)
-            nodes = []
-            for i, pos in enumerate(positions):
-                temp_dists = dist[i]
-                threshold = 0.3
-                neigh = []
-                for index in range(len(temp_dists)):
-                    if temp_dists[index] <= threshold:
-                        neigh.append(tid_list[index])
-                tid = tid_list[i]
-                noun = tid_words[tid]
-                noun = tid_words[tid]['noun'].split()
-                text = tid_words[tid]['text']
-                cotids = [[str(tweet[0]), tweet[1]]
-                          for tweet in tid_tids[tid]]
-                nodes.append(dict(x=pos[0], y=pos[1], tid=tid, year=year,
-                                  noun=noun, text=text, cotids=cotids))
-            year_nodes[year] = nodes
-        with open('../data/mds_layout.json', 'w') as f:
-            json.dump(year_nodes, f)
+            date, tid = data[0], data[1]
+            ymd = date.split('-')
+            year, month = ymd[0], ymd[1]
+            if year in ['2011', '2012', '2013']:
+                offset = (int(year) - 2011) * 12
+                index = int(month) - 1 + offset
+                tid_dateinfo[tid][index] += 1
+            elif year in ['2014', '2015', '2016']:
+                month = int(month)
+                offset = 36 + (int(year)-2014) * 4
+                index = math.floor((month-1)/3) + offset
+                tid_dateinfo[tid][index] += 1
+            else:
+                tid_dateinfo[tid][48] += 1
+        with open('../data/current/nodes_clustering.json', 'r') as f:
+            nodes = json.load(f)['nodes']
+        for node in nodes:
+            tid = node['tid']
+            node['rtdate'] = tid_dateinfo[tid]
+        with open('../data/current/nodes_rtdate.json', 'w') as f:
+            json.dump(dict(nodes=nodes), f)
 
-    def layout_graph(self):
+
+class SysTest():
+    def __init__(self):
+        if not os.path.exists('../data/model/wiki.model'):
+            print('training model')
+            self.mode_training()
+        else:
+            print('loading model')
+            self.model = word2vec.Word2Vec.load('../data/model/wiki.model')
+
+    def mode_training(self):
+        logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s',
+                            level=logging.INFO)
+        sentences = word2vec.Text8Corpus('../data/model/wiki_wakati.txt')
+        model = word2vec.Word2Vec(sentences, size=200, min_count=20, window=15)
+        model.save('../data/model/wiki.model')
+
+    def generate_testData(self):
         '''
-        return graph data for visualization
+        use data in 2011 and 2012 as test data
         '''
-        jsonfile = {}
-        dataset = pd.read_csv('../data/tweet_text.csv')
-        dataset = dataset.values
-        tid_words = {}
+        def get_vector_words(words):
+            sum_vec = np.zeros(200)
+            word_count = 0
+            for word in words:
+                try:
+                    sum_vec += self.model.wv[word]
+                    word_count += 1
+                except:
+                    pass
+            return sum_vec / word_count
+
+        def cos_sim(vec1, vec2):
+            return np.dot(vec1, vec2) / (np.linalg.norm(vec1) *
+                                         np.linalg.norm(vec2))
+
+        dataset = pd.read_csv('../data/current/retweet_info.csv').values
+        tid_dateinfo = collections.defaultdict(lambda: [0]*24)
         for data in dataset:
-            tid_words[str(data[0])] = dict(noun=data[1], text=data[2])
-        with open('../data/mds_layout.json', 'r') as f:
-            year_nodes = json.load(f)
-        all_nodes = []
-        for year, nodelist in year_nodes.items():
-            for nodedict in nodelist:
-                all_nodes.append(nodedict)
-        # add tid text information
-        tid_text = {}
-        for tid, worddict in tid_words.items():
-            tid_text[str(tid)] = worddict['text']
-        # add timeline information
-        with open('../data/timeline.json', 'r') as f:
-            tid_time = json.load(f)
-        # add ego network information
-        with open('../data/ego_network.json', 'r') as f:
-            ego_network = json.load(f)
-        # add tag extension
-        with open('../data/word_list.json', 'r') as f:
-            word_list = json.load(f)
-        jsonfile = {'mds': all_nodes, 'ego': ego_network, 'tag': word_list,
-                    'tidtime': tid_time, 'tidtext': tid_text}
-        with open('../data/layout.json', 'w') as f:
-            json.dump(jsonfile, f)
+            date, tid, = data[0], str(data[1])
+            ymd = date.split('-')
+            year, month = ymd[0], ymd[1]
+            if year in ['2011', '2012']:
+                offset = (int(year)-2011)*12
+                index = int(month) - 1 + offset
+                tid_dateinfo[tid][index] += 1
+            else:
+                pass
+        # calculate similarity distances
+        with open('../data/current/tweet_info.json', 'r') as f:
+            dataset = json.load(f)
+        tid_list, vec_list, word_list = [], [], []
+        for tid, info in dataset.items():
+            if tid in tid_dateinfo:
+                words = info['words']
+                word_list.append(words)
+                tid_list.append(tid)
+                vec_list.append(get_vector_words(words))
+        print(len(tid_list), len(vec_list), len(tid_dateinfo))
+        assert len(tid_list) == len(vec_list)
+        assert len(tid_list) == len(tid_dateinfo)
+        # length = len(tid_list)
+        # dist_mat = [[0]*length for _ in range(length)]
+        # for i in range(length-1):
+        #     for j in range(i+1, length):
+        #         dist_mat[i][j] = dist_mat[j][i] = 1 - cos_sim(vec_list[i],
+        #                                                       vec_list[j])
+        # tsne layout
+        nodes_list = []
+        tsne = manifold.TSNE(n_components=2, random_state=0)
+        positions = tsne.fit_transform(np.array(vec_list))
+        for index, pos in enumerate(positions):
+            tid = tid_list[index]
+            word = word_list[index]
+            x_pos, y_pos = float(pos[0]), float(pos[1])
+            nodes_list.append(dict(tid=tid, x=x_pos, y=y_pos,
+                                   rtd=tid_dateinfo[tid],
+                                   kw=word))
+        with open('../data/current/test/nodes.json', 'w') as f:
+            json.dump(dict(nodes=nodes_list), f)
 
 
 if __name__ == '__main__':
-    graph = Graph()
-    # graph.ego_network()
-    # graph.mds_layout()
-    # graph.timeline()
-    # graph.coretweet_pattern()
-    graph.layout_graph()
-    # nlp = Nlp()
-    # nlp.tweet_pagerank()
-    # nlp.similarity_dist()
-    # nlp.word_list()
+    nlp = NLProcessor()
+    # nlp.process_csv()
+    nlp.doc_to_vec_model()
+    # nlp.word_corpus()
+    # nlp.text_process()
+    # nlp.snapshot()
+    # graph = Graph()
+    # graph.tsne_layout()
+    # graph.process_clustering()
+    # graph.process_retweet_info()
+    # st = SysTest()
+    # st.generate_testData()
