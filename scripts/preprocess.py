@@ -101,7 +101,8 @@ class NLProcessor():
             node = mt.parseToNode(text)
             while node:
                 fields = node.feature.split(',')
-                if fields[0] == '名詞' and fields[2] == '一般' and\
+                # and fields[2] == '一般'
+                if fields[0] == '名詞' and\
                         fields[1] != '代名詞' and fields[1] != '連体化' and\
                         fields[1] != '非自立':
                     word = node.surface
@@ -606,8 +607,8 @@ class SysTest():
 
 if __name__ == '__main__':
     nlp = NLProcessor()
-    # nlp.process_csv()
-    nlp.doc_to_vec_model()
+    nlp.process_csv()
+    # nlp.doc_to_vec_model()
     # nlp.word_corpus()
     # nlp.text_process()
     # nlp.snapshot()

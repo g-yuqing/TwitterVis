@@ -1,5 +1,7 @@
 import Vue from 'vue'
 import App from './App'
+
+
 import {
   Select,
   Option,
@@ -14,6 +16,8 @@ import {
   TableColumn,
   Button,
   Tag,
+  Tabs,
+  TabPane,
 } from 'element-ui'
 import 'element-ui/lib/theme-chalk/index.css'
 
@@ -31,6 +35,8 @@ Vue.use(Table)
 Vue.use(TableColumn)
 Vue.use(Button)
 Vue.use(Tag)
+Vue.use(Tabs)
+Vue.use(TabPane)
 Vue.config.lang = 'en'
 
 

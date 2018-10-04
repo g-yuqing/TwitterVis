@@ -1,4 +1,4 @@
-import * as d3 from 'd3'
+// import * as d3 from 'd3'
 
 export default class NodeChart {
   constructor() {
@@ -11,9 +11,9 @@ export default class NodeChart {
       pieChartBorderWidth: '1',
       showLabelText: false,
       labelText: 'text',
-      labelColor: 'blue'
+      labelColor: 'blue',
+      circleClass: 'tsne-circle'
     }
-    // this.color = d3.scaleOrdinal(d3.schemeCategory10)
     this.color = ['#e6194b', '#3cb44b', '#ffe119', '#0082c8', '#f58231',
       '#911eb4', '#46f0f0', '#f032e6', '#d2f53c', '#fabebe', '#008080',
       '#e6beff', '#aa6e28', '#fffac8', '#800000', '#aaffc3', '#808000',
@@ -31,9 +31,11 @@ export default class NodeChart {
     const outerStrokeWidth = this.getOptionOrDefault('outerStrokeWidth', options)
     const radius = this.getOptionOrDefault('radius', options)
     const parentNodeColor = this.getOptionOrDefault('parentNodeColor', options)
+    const parentCircleClass = this.getOptionOrDefault('circleClass', options)
 
     nodeElement.insert('circle')
       .attr('id', 'parent-pie')
+      .attr('class', parentCircleClass)
       .attr('r', radius)
       .attr('fill', parentNodeColor)
       .attr('stroke', parentNodeColor)
@@ -44,9 +46,11 @@ export default class NodeChart {
     const radius = this.getOptionOrDefault('radius', options)
     const pieChartBorderColor = this.getOptionOrDefault('pieChartBorderColor', options)
     const pieChartBorderWidth = this.getOptionOrDefault('pieChartBorderWidth', options)
+    const pieChartCircleClass = this.getOptionOrDefault('circleClass', options)
 
     nodeElement.insert('circle')
       .attr('r', radius)
+      .attr('class', pieChartCircleClass)
       .attr('fill', 'transparent')
       .attr('stroke', pieChartBorderColor)
       .attr('stroke-width', pieChartBorderWidth)
@@ -56,6 +60,7 @@ export default class NodeChart {
     const radius = this.getOptionOrDefault('radius', options)
     const halfRadius = radius / 2
     const halfCircumference = 2 * Math.PI * halfRadius
+    const halfCircleClass = this.getOptionOrDefault('circleClass', options)
 
     let percentToDraw = 0
     for (const p in percentages) {
@@ -63,6 +68,7 @@ export default class NodeChart {
 
       nodeElement.insert('circle', '#parent-pie + *')
         .attr('r', halfRadius)
+        .attr('class', halfCircleClass)
         .attr('fill', 'transparent')
         .style('stroke', this.color[percentages[p].color])
         .style('stroke-width', radius)
