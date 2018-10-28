@@ -1,19 +1,19 @@
 <template>
-  <div id="tsnelayout"></div>
+  <div id="stateview"></div>
 </template>
 
 <script>
-import Tsnelayout from '../scripts/tsnelayout'
+import Statelayout from '../scripts/statelayout'
 
 export default {
-  name: 'Tsnelayout',
+  name: 'StateView',
   data() {
     return {
-      tl: new Tsnelayout(),
+      sl: new Statelayout(),
     }
   },
   mounted() {
-    this.eventHub.$on('initTsnelayout', dataset => this.tl.initScene(dataset))
+    this.eventHub.$on('initStateView', dataset => this.sl.initScene(dataset))
   }
 }
 </script>
@@ -36,7 +36,7 @@ export default {
   .brush .selection {
     fill: steelblue;
   }
-  #tsnelayout {
+  #stateview {
     position: relative;
     float: left;
     -webkit-filter: drop-shadow( 0px 3px 3px rgba(0,0,0,.3) );

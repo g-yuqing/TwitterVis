@@ -103,3 +103,20 @@ FROM
   `vizlab-crest.guanyq.tweet_basic` AS B
 WHERE
   B.count > 200 AND B.tid = A.retweeted_status.id
+
+
+
+
+-- 2011 retweet info
+SELECT
+  A.retweeted_status.id AS tid,
+  EXTRACT(DATE FROM A.created_at) AS date,
+  A.retweeted_status.user.id AS influencer,
+  A.user.id AS user,
+  A.text AS text,
+  B.count AS count
+FROM
+  `vizlab-crest.postcrisis_PQX.tweets` AS A,
+  `vizlab-crest.guanyq.tweet_basic` AS B
+WHERE
+  B.tid = A.retweeted_status.id　and EXTRACT(YEAR FROM DATE(A.created_at))=2011
