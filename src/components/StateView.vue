@@ -14,42 +14,19 @@ export default {
   },
   mounted() {
     this.eventHub.$on('initStateView', dataset => this.sl.initScene(dataset))
+    // this.eventHub.$on('updateStateView', data => this.sl.updateNode(data))
+    this.eventHub.$on('showStateClusters', () => this.sl.showClusters())
+    this.eventHub.$on('updateStateView', () => this.sl.updateStateView())
+    this.eventHub.$on('resetOriginView', () => this.sl.resetOriginView())
   }
 }
 </script>
 
 <style>
-  .dot {
-    /* stroke: #000; */
-  }
-  .axis--grid .domain {
-    fill: #ddd;
-    stroke: none;
-  }
-  .axis--x .domain,
-  .axis--grid .tick line {
-    stroke: #fff;
-  }
-  .axis--grid .tick--minor line {
-    stroke-opacity: 0.5;
-  }
-  .brush .selection {
-    fill: steelblue;
-  }
   #stateview {
     position: relative;
     float: left;
     -webkit-filter: drop-shadow( 0px 3px 3px rgba(0,0,0,.3) );
     filter: drop-shadow( 0px 3px 3px rgba(0,0,0,.25) )
-  }
-  .hull {
-    opacity: 0.2;
-    /* stroke-opacity: 0.3; */
-    stroke-width: 32px;
-    stroke-linejoin: round;
-  }
-  text.mono {
-    font-family: Consolas, courier;
-    fill: #000;
   }
 </style>

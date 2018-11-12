@@ -12,7 +12,7 @@ export default class NodeChart {
       showLabelText: false,
       labelText: 'text',
       labelColor: 'blue',
-      circleClass: 'tsne-circle'
+      circleClass: 'state-circle'
     }
     this.color = ['#e6194b', '#3cb44b', '#ffe119', '#0082c8', '#f58231',
       '#911eb4', '#46f0f0', '#f032e6', '#d2f53c', '#fabebe', '#008080',
@@ -37,6 +37,8 @@ export default class NodeChart {
       .attr('id', 'parent-pie')
       .attr('class', parentCircleClass)
       .attr('r', radius)
+      .attr('cx', d => d.x)
+      .attr('cy', d => d.y)
       .attr('fill', parentNodeColor)
       .attr('stroke', parentNodeColor)
       .attr('stroke-width', outerStrokeWidth)
@@ -51,6 +53,8 @@ export default class NodeChart {
     nodeElement.insert('circle')
       .attr('r', radius)
       .attr('class', pieChartCircleClass)
+      .attr('cx', d => d.x)
+      .attr('cy', d => d.y)
       .attr('fill', 'transparent')
       .attr('stroke', pieChartBorderColor)
       .attr('stroke-width', pieChartBorderWidth)
@@ -64,15 +68,21 @@ export default class NodeChart {
 
     let percentToDraw = 0
     for (const p in percentages) {
-      percentToDraw += percentages[p].percent
-
+      const percent = percentages[p]
+      if(percent == 0) {
+        continue
+      }
+      percentToDraw += percent
       nodeElement.insert('circle', '#parent-pie + *')
         .attr('r', halfRadius)
+        .attr('cx', d => d.x)
+        .attr('cy', d => d.y)
         .attr('class', halfCircleClass)
         .attr('fill', 'transparent')
-        .style('stroke', this.color[percentages[p].color])
+        // .style('stroke', this.color[p])
+        .style('stroke', 'steelblue')
         .style('stroke-width', radius)
-        .style('stroke-dasharray', `${halfCircumference * percentToDraw / 100} ${halfCircumference}`)
+        .style('stroke-dasharray', `${halfCircumference * percentToDraw} ${halfCircumference}`)
     }
   }
 
@@ -87,16 +97,19 @@ export default class NodeChart {
   }
 
   drawNodePie(nodeElement, percentages, options) {
-    this.drawParentCircle(nodeElement, options)
-    if (!percentages) return
-    this.drawPieChart(nodeElement, percentages, options)
-    const showPieChartBorder = this.getOptionOrDefault('showPieChartBorder', options)
-    if (showPieChartBorder) {
-      this.drawPieChartBorder(nodeElement, options)
+    if (percentages.length==0) {
+      this.drawParentCircle(nodeElement, options)
     }
-    const showLabelText = this.getOptionOrDefault('showLabelText', options)
-    if (showLabelText) {
-      this.drawTitleText(nodeElement, options)
+    else {
+      this.drawPieChart(nodeElement, percentages, options)
+      const showPieChartBorder = this.getOptionOrDefault('showPieChartBorder', options)
+      if(showPieChartBorder) {
+        this.drawPieChartBorder(nodeElement, options)
+      }
+      const showLabelText = this.getOptionOrDefault('showLabelText', options)
+      if(showLabelText) {
+        this.drawTitleText(nodeElement, options)
+      }
     }
   }
 

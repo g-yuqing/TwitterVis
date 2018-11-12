@@ -6,12 +6,12 @@ export default class Topiclayout {
   }
   initScene(graph) {
     const margin = {top: 70, right: 50, bottom: 10, left:20},
-      width = 1200,
+      width = 500,
       height = 500
-    graph.nodes.forEach( d => { d.x = 10, d.y = 10 })
-    graph.links.foreach
+    // graph.nodes.forEach( d => { d.x = 10, d.y = 10 })
+    // graph.links.foreach
     const d3cola = cola.d3adaptor(d3)
-      .linkDistance(120)
+      .linkDistance(30)
       .avoidOverlaps(true)
       .size([width, height])
     const svg = d3.select(document.getElementById('topicview')).append('svg')
@@ -24,36 +24,37 @@ export default class Topiclayout {
     d3cola.nodes(graph.nodes)
       .links(graph.links)
       .constraints(graph.constraints)
-      .flowLayout('x', 5)
-      .symmetricDiffLinkLengths(5)
+      // .flowLayout('x', 30)
+      // .symmetricDiffLinkLengths(6)
+      // .jaccardLinkLengths(30,0.7)
       .start(10, 10, 10)
     const link = g.append('g').selectAll('.link')
       .data(graph.links)
-      .enter().append('line')
-      .attr('class', 'link')
-      .style('stroke', '#999')
-      .style('stroke-width', 1)
+      .enter().append('path')
+      .attr('stroke', '#bbb')
+      .attr('fill', 'none')
     const node = g.append('g').selectAll('.node')
       .data(graph.nodes)
       .enter().append('g')
-    const circle = node.append('circle')
-      .attr('r', 3)
-      .style('fill', '#F00')
-      .on('mouseover', d => {
-        console.log(d.name)
-      })
+    // const circle = node.append('circle')
+    //   .attr('r', 3)
+    //   .style('fill', '#F00')
+    //   .on('mouseover', d => {
+    //     console.log(d.name)
+    //   })
     node.append('text')
       .text(d => d.word)
-      .attr('x', 6)
-      .attr('y', 3)
+      .attr('x', 0)
+      .attr('y', 3.5)
+      .attr('text-anchor', 'middle')
+      .attr('fill', d => d.color)
       .style('font-size', '7px')
     d3cola.on('tick', function() {
-      link.attr('x1', d => d.source.x)
-        .attr('y1', d => d.source.y)
-        .attr('x2', d => d.target.x)
-        .attr('y2', d => d.target.y)
-      // node.attr('cx', d => d.x)
-      //   .attr('cy', d => d.y)
+      // link.attr('d', d => `M${d.target.x},${d.target.y}C${d.target.x},${(d.target.y+d.source.y)/2} ${d.source.x},${(d.target.y+d.source.y)/2} ${d.source.x},${d.source.y}`)
+      link.attr('d', d => `M${d.source.x},${d.source.y}
+                           L${d.target.x},${d.target.y}`)
+        .attr('stroke-linejoin', 'round')
+        .attr('stroke-linecap', 'round')
       node.attr('transform', d => `translate(${d.x}, ${d.y})`)
     })
   }
