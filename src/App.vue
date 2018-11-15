@@ -1,30 +1,11 @@
 <template>
   <div id="app">
-    <!-- keyword list -->
-    <!-- <div id="keywordlist">
-      <el-row>
-        <el-checkbox-group v-model="checkboxGroup" size="mini">
-          <el-checkbox-button v-for="keyword in keywords"
-            :label="keyword"
-            :key="keyword">{{keyword}}
-          </el-checkbox-button>
-        </el-checkbox-group>
-      </el-row>
-    </div> -->
     <!-- state view -->
     <stateview></stateview>
     <!-- topic view -->
     <div id="topicview"></div>
-    <!-- tab view -->
-    <!-- <el-tabs v-model="activeName" @tab-click="handleTabClick">
-      <el-tab-pane label="Recurring" name="first">
-      </el-tab-pane>
-      <el-tab-pane label="Leap" name="second">
-      </el-tab-pane>
-      <el-tab-pane label="Worm" name="third">
-      </el-tab-pane>
-    </el-tabs> -->
-    <div id='detailed-view'></div>
+    <!-- keyword view -->
+    <keywordview></keywordview>
   </div>
 </template>
 
@@ -34,21 +15,18 @@ import * as d3 from 'd3'
 import * as dat from 'dat.gui'
 import Topiclayout from './scripts/topiclayout'
 import StateView from './components/StateView'
+import KeywordView from './components/KeywordView'
 
 
 export default {
   name: 'App',
   components: {
     stateview: StateView,
+    keywordview: KeywordView,
   },
   data: () => ({
     // control panel
     gui: new dat.GUI({autoPlace: false}),
-    // // keyword parameters
-    // checkboxGroup: [],
-    // keywords: [],
-    // tab parameters
-    activeName: 'second',
     topiclayout: new Topiclayout(),
   }),
   mounted() {
@@ -57,9 +35,6 @@ export default {
         this.keywordData = dataset.keyword  // {period: {date: [[kw, score],]}, keywords:[[kw: score], []]}
         this.stateData = dataset.state  // {nodes:[], links: []}
         this.topicData = dataset.topic  // {date1: [{tid, text,count, tpc}, {}],}
-        // // keywords
-        // this.keywords = this.keywordData.period['2011-03-11'].map(d => d[0])
-        // this.allkeywords = this.keywordData.keywords.map(d => d[0])
         // state
         const guiData = {
           text: 'test data',
@@ -78,20 +53,11 @@ export default {
         this.drawStateView()
         // topic
         this.topiclayout.initScene(this.topicData)
+        // keyword
+        this.drawKeywordView(this.keywordData.period)
       })
   },
   watch: {
-    // checkboxGroup(val) {
-    //   // console.log(this.allkeywords.length)
-    //   // const valIdxs = new Array(this.allkeywords.length).fill(0)
-    //   // for(const i in val) {
-    //   //   const idx = this.allkeywords.indexOf(val[i])
-    //   //   valIdxs[idx] = 1
-    //   // }
-    //   // // this.eventHub.$emit('updateStateView', valIdxs)
-    //   // this.eventHub.$emit('showCluster')
-    //   this.eventHub.$emit('updateClusterView')
-    // }
   },
   methods: {
     async loadData() {
@@ -111,8 +77,16 @@ export default {
     drawStateView() {
       this.eventHub.$emit('initStateView', this.stateData)
     },
-    // tab view
-    handleTabClick(tab, event) {}
+    drawKeywordView(dataset) {
+      const data = [
+        {date: '2011-03-21', kwscore: dataset['2011-03-21']},
+        {date: '2011-03-22', kwscore: dataset['2011-03-22']},
+        {date: '2011-03-23', kwscore: dataset['2011-03-23']},
+        {date: '2011-03-24', kwscore: dataset['2011-03-24']},
+        {date: '2011-03-25', kwscore: dataset['2011-03-25']}
+      ]
+      this.eventHub.$emit('initKeywordView', data)
+    }
   }
 }
 </script>

@@ -47,16 +47,23 @@ export default class Statelayout {
       .on('start brush', brushed)
       .on('end', brushended)
     function brushed() {
-      const s = d3.event.selection,
-        x0 = s[0][0],
-        y0 = s[0][1],
-        dx = s[1][0]-x0,
-        dy = s[1][1]-y0
-      console.log(x0, y0, dx, dy)
+      console.log('selecting')
     }
     function brushended() {
       if(!d3.event.selection) {
         console.log('brushended')
+      }
+      else {
+        const s = d3.event.selection,
+          x0 = s[0][0],
+          y0 = s[0][1],
+          x1 = s[1][0],
+          y1 = s[1][1]
+        d3.selectAll('.state-node').each(d => {
+          if(d.x>=x0 && d.x<=x1 && d.y>=y0 && d.y<=y1) {
+            console.log(d.date)
+          }
+        })
       }
     }
     // links
