@@ -26,7 +26,6 @@ export default {
   data: () => ({
     // control panel
     gui: new dat.GUI({autoPlace: false}),
-    // topiclayout: new Topiclayout(),
   }),
   mounted() {
     this.loadData()
@@ -93,16 +92,6 @@ export default {
     // layout methods
     drawStateView() {
       this.eventHub.$emit('initStateView', this.stateData, this.keywordData)
-    },
-    drawKeywordView(dataset) {
-      const data = [
-        {date: '2011-03-21', kwscore: dataset['2011-03-21']},
-        {date: '2011-03-22', kwscore: dataset['2011-03-22']},
-        {date: '2011-03-23', kwscore: dataset['2011-03-23']},
-        {date: '2011-03-24', kwscore: dataset['2011-03-24']},
-        {date: '2011-03-25', kwscore: dataset['2011-03-25']}
-      ]
-      this.eventHub.$emit('initKeywordView', data)
     }
   }
 }

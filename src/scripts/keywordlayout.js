@@ -1,5 +1,6 @@
 import * as d3 from 'd3'
 import axios from 'axios'
+import {Spinner} from 'spin.js'
 import Topiclayout from './topiclayout'
 
 
@@ -16,7 +17,17 @@ export default class Keywordlayout {
       titleHeight = 20,
       graphHeight = height - titleHeight,
       datelist = dataset.map(d => d.date),
-      tl = new Topiclayout()
+      tl = new Topiclayout(),
+      loadOpt = {
+        lines: 9, // The number of lines to draw
+        length: 9, // The length of each line
+        width: 5, // The line thickness
+        radius: 14, // The radius of the inner circle
+        color: '#FF847C', // #rgb or #rrggbb or array of colors
+        speed: 1, // Rounds per second
+        trail: 40, // Afterglow percentage
+        className: 'spinner', // The CSS class to assign to the spinner
+      }
     // empty previous visualization
     document.getElementById('keywordview').innerHTML = ''
     // visualize
@@ -154,6 +165,8 @@ export default class Keywordlayout {
         d3.selectAll('.keyword-link').style('stroke-opacity', null)
       })
       .on('click', d => {
+        // trigger loading
+        const spinner = new Spinner(loadOpt).spin(document.getElementById('topicview'))
         const params = new URLSearchParams()
         params.set('keyword', d.word)
         for(const date of datelist) {
@@ -165,6 +178,7 @@ export default class Keywordlayout {
             const topicGraph = res.data
             console.log('retreive topic graph data successfully')
             tl.initScene(topicGraph)
+            spinner.stop()
           })
       })
   }
