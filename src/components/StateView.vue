@@ -13,11 +13,11 @@ export default {
     }
   },
   mounted() {
-    this.eventHub.$on('initStateView', dataset => this.sl.initScene(dataset))
-    // this.eventHub.$on('updateStateView', data => this.sl.updateNode(data))
-    this.eventHub.$on('showStateClusters', () => this.sl.showClusters())
+    this.eventHub.$on('initStateView', (stateData, keywordData) => this.sl.initScene(stateData, keywordData))
     this.eventHub.$on('updateStateView', () => this.sl.updateStateView())
     this.eventHub.$on('resetOriginView', () => this.sl.resetOriginView())
+    this.eventHub.$on('showGroups', () => this.sl.showGroups())
+    this.eventHub.$on('hideGroups', () => this.sl.hideGroups())
   }
 }
 </script>

@@ -1,16 +1,5 @@
 <template>
-  <div id="keywordview">
-    <!-- <div id="keywordtag">
-      <el-row>
-        <el-checkbox-group v-model="checkboxGroup" size="mini">
-          <el-checkbox-button v-for="keyword in keywords"
-            :label="keyword"
-            :key="keyword">{{keyword}}
-          </el-checkbox-button>
-        </el-checkbox-group>
-      </el-row> -->
-    </div>
-  </div>
+  <div id="keywordview"></div>
 </template>
 
 <script>

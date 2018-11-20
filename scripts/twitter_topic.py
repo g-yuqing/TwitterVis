@@ -143,14 +143,14 @@ def generate_graph(roots, kwlist):
             constraints.append(dict(axis='x', left=onode1.nid,
                                     right=onode2.nid, gap=0, equality='true'))
             constraints.append(dict(axis='y', left=onode1.nid,
-                                    right=onode2.nid, gap=15))
+                                    right=onode2.nid, gap=10))
         # horizontal
         if outlen > 0:
             constraints.append(dict(axis='y', left=node.nid,
                                     right=outnodes[int(outlen/2)].nid,
                                     gap=0, equality='true'))
             constraints.append(dict(axis='x', left=node.nid,
-                                    right=outnodes[int(outlen/2)].nid, gap=15))
+                                    right=outnodes[int(outlen/2)].nid, gap=25))
     graph = dict(nodes=nodes, links=links, constraints=constraints)
     # with open('../data/retweet-2011/topic_graph.json', 'w') as f:
     #     json.dump(graph, f)
@@ -223,7 +223,6 @@ def extract_sentences(corpus, kwlist, thres=100):
             rescorpus = word_corpus[reswords]
             resempty = [t for t in popcorpus if t not in rescorpus]
             assert len(rescorpus)+len(resempty) == len(popcorpus)
-            # print('empty: ', reswords, len(rescorpus), len(resempty))
             return reswords, rescorpus, resempty
         else:
             words = popword.split(',')
@@ -251,7 +250,6 @@ def extract_sentences(corpus, kwlist, thres=100):
                 rescorpus = word_corpus[reswords]
                 resempty = [t for t in popcorpus if t not in rescorpus]
                 assert len(rescorpus)+len(resempty) == len(popcorpus)
-                # print('non-empty: ', reswords, len(rescorpus), len(resempty))
             except:
                 reswords = None
                 rescorpus = None
@@ -288,10 +286,6 @@ def extract_sentences(corpus, kwlist, thres=100):
                 for word in text:
                     curwords_score[word] += 1
             curwords = max(curwords_score, key=curwords_score.get)
-            # temp = list(curwords_score.keys())
-            # print('most_frequent_word: => ', temp,
-            #       [curwords_score[k] for k in temp], len(temp),
-            #       curwords, ':', curwords_score[curwords])
             return curwords
         else:
             # convert string to list
@@ -316,13 +310,9 @@ def extract_sentences(corpus, kwlist, thres=100):
                 curwords = max(curwords_score, key=curwords_score.get)
             except:
                 curwords = None
-            # temp = list(curwords_score.keys())
-            # print('most_frequent_word: => ', temp,
-            #       [curwords_score[k] for k in temp], len(temp),
-            #       curwords, ':', curwords_score[curwords])
             return curwords
 
-    print('keywords: ', kwlist)
+    # print('keywords: ', kwlist)
     leaves = {'empty': corpus}  # words: corpus
     value_node = {}
     result = set()
@@ -374,9 +364,9 @@ def extract_sentences(corpus, kwlist, thres=100):
     sentree(leaves)
     # prune leaves
     resleaves, count = pruning(result, kwlist)
-    print(count)
-    for sentence in resleaves:
-        print(sentence)
+    # print(count)
+    # for sentence in resleaves:
+    #     print(sentence)
     # remove root
     resroots = []
     for value, node in value_node.items():

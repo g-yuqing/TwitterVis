@@ -1,16 +1,14 @@
 # import collections
 import json
 import numpy as np
-# from sklearn.cluster import DBSCAN
+import collections
+from sklearn.cluster import DBSCAN
 from sklearn import manifold
 from sklearn.decomposition import PCA
 from twitter_keyword import create_period_keyword
 
 
 def state_graph(count=20, timestep=5, movestep=1):
-    def cos_sim(vec1, vec2):
-        return np.dot(vec1, vec2) / (np.linalg.norm(vec1) *
-                                     np.linalg.norm(vec2))
     # calculate keywords
     period_kwscore, keyword_score =\
         create_period_keyword(count, timestep, movestep)
@@ -53,51 +51,63 @@ def state_graph(count=20, timestep=5, movestep=1):
         src = dict(x=srcn['x'], y=srcn['y'])
         dst = dict(x=dstn['x'], y=dstn['y'])
         links.append(dict(src=src, dst=dst))
-    # # state
-    # # clustering
-    # datelen = len(graph)
-    # dists = [[0]*datelen for _ in range(datelen)]
-    # for i in range(datelen-1):
-    #     for j in range(i+1, datelen):
-    #         dists[i][j] = dists[j][i] = 1 - cos_sim(graph[i], graph[j])
-    # db = DBSCAN(eps=0.03, min_samples=1, metric='precomputed').fit(dists)
-    # labels = db.labels_
-    # cluster_index = collections.defaultdict(list)
-    # for idx, clu in enumerate(labels):
-    #     cluster_index[clu].append(idx)
-    # # 0: recurrent, 1: worm, 2: leap
-    # timespan = 5
-    # cluster_state = collections.defaultdict(int)
-    # for clu, idxs in cluster_index.items():
-    #     if len(idxs) == 1:
-    #         cluster_state[clu] = 1
-    #     else:
-    #         diffs = np.diff(idxs)
-    #         if max(diffs) > timespan:
-    #             cluster_state[clu] = 0
-    #         else:
-    #             cluster_state[clu] = 1
-    # # cluster for convex hull
-    # clusters = []
-    # for clu, idxs in cluster_index.items():
-    #     node_pos = list(map(
-    #         lambda idx: [nodes[idx]['x'], nodes[idx]['y']], idxs))
-    #     clusters.append(dict(state=int(cluster_state[clu]), npos=node_pos))
     # save to json file
     with open('../data/retweet-2011/state_graph.json', 'w') as f:
         json.dump(dict(nodes=nodes, links=links), f)
 
 
-def clustering(matrix):
-    def cos_sim(vec1, vec2):
-        return np.dot(vec1, vec2) / (np.linalg.norm(vec1) *
-                                     np.linalg.norm(vec2))
-    vecnum = len(matrix)
-    sims = [[1]*vecnum for _ in range(vecnum)]
-    for i in range(vecnum-1):
-        for j in range(i+1, vecnum):
-            sims[i][j] = sims[j][i] = cos_sim(matrix[i], matrix[j])
+def clustering(count=20):
+    '''
+    cluster based on the positon of tsne result
+    '''
+    with open('../data/retweet-2011/state_graph.json', 'r') as f:
+        dataset = json.load(f)
+    links = dataset['links']
+    nodes = dataset['nodes']
+    positions = [[node['x'], node['y']] for node in nodes]
+    clusters = DBSCAN(eps=3, min_samples=1).fit(positions)
+    labels = clusters.labels_
+    for label, node in zip(labels, nodes):
+        node['g'] = int(label)
+    # reset topic pattern according to groups
+    groupnum = max(labels) - min(labels) + 1
+    group_node = collections.defaultdict(list)
+    group_idx = collections.defaultdict(list)
+    for idx, group in enumerate(labels):
+        group_idx[group].append(idx)
+        group_node[group].append(nodes[idx])
+    group_ptn = [[] for _ in range(groupnum)]
+    for group, nodelist in group_node.items():
+        ptn = np.zeros(len(nodelist[0]['kw']))
+        for node in nodelist:
+            ptn += (np.array(node['kw'])*node['ratio'])
+        # normalize
+        group_ptn[group] = ptn / np.linalg.norm(ptn)
+    pca = PCA(n_components=1)
+    pcapos = pca.fit_transform(group_ptn)
+    print(pca.explained_variance_ratio_)
+    print(pca.n_components_)
+    for idx, node in enumerate(nodes):
+        group = labels[idx]
+        ppos = pcapos[group]
+        node['pca'] = float(ppos)
+    # set state {0: worm} {1: recurring}
+    thres = 5
+    for group, idxlist in group_idx.items():
+        if len(idxlist) < 2:
+            idx = idxlist[0]
+            nodes[idx]['state'] = 0
+        else:
+            if max([y-x for x, y in zip(idxlist, idxlist[1:])]) >= thres:
+                for idx in idxlist:
+                    nodes[idx]['state'] = 1
+            else:
+                for idx in idxlist:
+                    nodes[idx]['state'] = 0
+    with open('../data/retweet-2011/state_graph.json', 'w') as f:
+        json.dump(dict(nodes=nodes, links=links), f)
 
 
 if __name__ == '__main__':
-    state_graph()
+    # state_graph()
+    clustering()

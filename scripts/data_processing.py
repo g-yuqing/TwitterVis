@@ -9,7 +9,6 @@ import pandas as pd
 def csv2json():
     '''
     convert csv of tweet-2011 to json file
-
     '''
     def is_japanese(string):
         for ch in string:

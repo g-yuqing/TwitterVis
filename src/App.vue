@@ -11,9 +11,8 @@
 
 <script>
 import * as d3 from 'd3'
-// import * as moment from 'moment'
 import * as dat from 'dat.gui'
-import Topiclayout from './scripts/topiclayout'
+// import Topiclayout from './scripts/topiclayout'
 import StateView from './components/StateView'
 import KeywordView from './components/KeywordView'
 
@@ -27,7 +26,7 @@ export default {
   data: () => ({
     // control panel
     gui: new dat.GUI({autoPlace: false}),
-    topiclayout: new Topiclayout(),
+    // topiclayout: new Topiclayout(),
   }),
   mounted() {
     this.loadData()
@@ -36,25 +35,43 @@ export default {
         this.stateData = dataset.state  // {nodes:[], links: []}
         this.topicData = dataset.topic  // {date1: [{tid, text,count, tpc}, {}],}
         // state
+        // state - init gui dat
         const guiData = {
-          text: 'test data',
-          PCAView: false
+          dataset: 'path0',
+          ShowGroups: false,
+          ChangeView: false,
         }
-        this.gui.add(guiData, 'text')
-        this.gui.add(guiData, 'PCAView').onChange(val => {
+        this.gui.domElement.id = 'state-gui'
+        this.gui.add(guiData, 'dataset', {
+          '2011': 'path0',
+          'GroupA': 'path1',
+          'GroupB': 'path2',
+          'GroupC': 'path3',
+          'GroupD': 'path4',
+          'GroupE': 'path5',
+        })
+        this.gui.add(guiData, 'ShowGroups').onChange(val => {
           if(val) {
-            this.eventHub.$emit('updateStateView')
+            this.eventHub.$emit('showGroups')
           }
           else {
-            this.eventHub.$emit('resetOriginView')
+            this.eventHub.$emit('hideGroups')
           }
         })
-        const controlPanel = document.getElementById('stateview').appendChild(this.gui.domElement)
+        // this.gui.add(guiData, 'ChangeView').onChange(val => {
+        //   if(val) {
+        //     this.eventHub.$emit('updateStateView')
+        //   }
+        //   else {
+        //     this.eventHub.$emit('resetOriginView')
+        //   }
+        // })
+        document.getElementById('stateview').appendChild(this.gui.domElement)
         this.drawStateView()
         // topic
-        this.topiclayout.initScene(this.topicData)
+        // this.topiclayout.initScene(this.topicData)
         // keyword
-        this.drawKeywordView(this.keywordData.period)
+        // this.drawKeywordView(this.keywordData.period)
       })
   },
   watch: {
@@ -75,7 +92,7 @@ export default {
     },
     // layout methods
     drawStateView() {
-      this.eventHub.$emit('initStateView', this.stateData)
+      this.eventHub.$emit('initStateView', this.stateData, this.keywordData)
     },
     drawKeywordView(dataset) {
       const data = [
@@ -98,23 +115,23 @@ export default {
   -moz-osx-font-smoothing: grayscale;
   color: #2c3e50;
 }
+#stateview {
+  width: 500px;
+  height: 500px;
+}
 #topicview {
   position: relative;
   float: left;
+  width: 700px;
+  height: 500px;
 }
-.el-tag + .el-tag {
-  margin-left: 7px;
+#keywordview {
+  width: 1200px;
+  height: 300px;
 }
-.button-new-tag {
-  margin-left: 10px;
-  height: 32px;
-  line-height: 30px;
-  padding-top: 0;
-  padding-bottom: 0;
-}
-.input-new-tag {
-  width: 90px;
-  margin-left: 10px;
-  vertical-align: bottom;
+#state-gui {
+  position: absolute;
+  top: 2px;
+  left: 2px;
 }
 </style>

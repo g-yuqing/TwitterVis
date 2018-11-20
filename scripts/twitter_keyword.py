@@ -80,7 +80,7 @@ def create_date_keyword():
         json.dump(date_term_score, f)
 
 
-def create_period_keyword(count=20, timestep=5, movestep=1):
+def create_period_keyword(count=20, timestep=5, movestep=1, save=False):
     '''
     return period_kwscore, keyword_score (except big words)
     period_kwscore: {period: {keyword: score}} | keywords with high score
@@ -112,8 +112,9 @@ def create_period_keyword(count=20, timestep=5, movestep=1):
     # convert keyword_score dictionary to list
     keyword_score = sorted(keyword_score.items(), key=lambda kv: kv[1],
                            reverse=True)  # [(keyword, score), (), ()]
-    with open('../data/retweet-2011/top_keywords.json', 'w') as f:
-        json.dump(dict(period=period_kwscore, keywords=keyword_score), f)
+    if save:
+        with open('../data/retweet-2011/top_keywords.json', 'w') as f:
+            json.dump(dict(period=period_kwscore, keywords=keyword_score), f)
     return period_kwscore, keyword_score
 
 
