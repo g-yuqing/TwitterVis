@@ -8,8 +8,8 @@ from flask_cors import CORS
 
 app = Flask(__name__)
 api = Api(app)
+# cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 CORS(app)
-
 with open('../data/retweet-2011/state_database.json', 'r') as f:
     state_database = json.load(f)
 
@@ -36,7 +36,7 @@ class TopicResource(Resource):
                 d['words'] for d in corpuslist if keyword in d['words']]
             corlist += [d for d in corpuslist if keyword in d['words']]
             kwlist += [d[0] for d in kwscorelist]
-        _, roots = extract_sentences(wordslist, kwlist, thres=30)
+        _, roots = extract_sentences(wordslist, kwlist, thres=50)
         graph = generate_graph(roots, kwlist)
         return [graph, corlist]
 
@@ -45,4 +45,4 @@ api.add_resource(TopicResource, '/topic/<parameters>')
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    app.run(debug=True, host='0.0.0.0', port=port)
+    app.run(debug=False, host='0.0.0.0', port=port)

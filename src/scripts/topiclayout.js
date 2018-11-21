@@ -100,7 +100,7 @@ export default class Topiclayout {
           .attr('class', 'tweet-text')
           .text(d => d.count)
           .attr('x', 0)
-          .attr('y', (d, i) => i*13)
+          .attr('y', (d, i) => i*25)
           .style('font-size', '10px')
         tweetG.selectAll('.tweet')
           .data(tweetData)
@@ -108,7 +108,7 @@ export default class Topiclayout {
           .attr('class', 'tweet-text')
           .text(d => d.text)
           .attr('x', 30)
-          .attr('y', (d, i) => i*13)
+          .attr('y', (d, i) => i*25)
           .style('font-size', '10px')
       })
     d3cola.on('tick', function() {

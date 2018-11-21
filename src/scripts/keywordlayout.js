@@ -172,8 +172,8 @@ export default class Keywordlayout {
         for(const date of datelist) {
           params.append('dates', date)
         }
-        const url = `http://0.0.0.0:5000/topic/${params.toString()}`
-        axios.get(url)
+        const url = `http://127.0.0.1:5000/topic/${params.toString()}`
+        axios.get(url, { crossdomain: true })
           .then(res => {
             const topicGraph = res.data[0],
               topicSentences = res.data[1]
