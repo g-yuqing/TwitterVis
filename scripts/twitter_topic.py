@@ -10,7 +10,7 @@ def generate_graph(roots, kwlist):
         def __init__(self, nid, word):
             self.nid = nid
             self.word = word
-            self.color = '#474747'
+            self.color = '#2A363B'  # '#474747'
             self.frequency = 0
             self.level = 0
             self.incomes = []
@@ -130,7 +130,7 @@ def generate_graph(roots, kwlist):
         inlen, outlen = len(innodes), len(outnodes)
         # nodes
         if node.word in kwlist:
-            node.color = '#CC527A'
+            node.color = '#E84A5F'  # '#CC527A'
         nodes.append(dict(id=node.nid, word=node.word, color=node.color,
                           tf=frequency[node.word]+inlen+outlen))
         # links
@@ -140,17 +140,21 @@ def generate_graph(roots, kwlist):
         # vertical
         for i in range(outlen-1):
             onode1, onode2 = outnodes[i], outnodes[i+1]
-            constraints.append(dict(axis='x', left=onode1.nid,
-                                    right=onode2.nid, gap=0, equality='true'))
+            # constraints.append(dict(axis='x', left=onode1.nid,
+            #                         right=onode2.nid, gap=0, equality='true'))
             constraints.append(dict(axis='y', left=onode1.nid,
                                     right=onode2.nid, gap=10))
         # horizontal
         if outlen > 0:
-            constraints.append(dict(axis='y', left=node.nid,
-                                    right=outnodes[int(outlen/2)].nid,
-                                    gap=0, equality='true'))
+            # constraints.append(dict(axis='y', left=node.nid,
+            #                         right=outnodes[int(outlen/2)].nid,
+            #                         gap=0, equality='true'))
+            # constraints.append(dict(axis='x', left=node.nid,
+            #                         right=outnodes[int(outlen/2)].nid, gap=25))
+            length = list(map(lambda d: len(d.word), outnodes))
+            right = length.index(max(length))
             constraints.append(dict(axis='x', left=node.nid,
-                                    right=outnodes[int(outlen/2)].nid, gap=25))
+                                    right=outnodes[right].nid, gap=10))
     graph = dict(nodes=nodes, links=links, constraints=constraints)
     # with open('../data/retweet-2011/topic_graph.json', 'w') as f:
     #     json.dump(graph, f)
@@ -386,12 +390,16 @@ def generate_database(timestep=5, movestep=1):
     bigwords = ['福島', '福島県', '原発', '福島原発', '東電', '放射能', '放射線']
     with open('../data/retweet-2011/sample.json', 'r') as f:
         tid_info = json.load(f)
-    date_corpus = collections.defaultdict(list)
+    date_word_text = collections.defaultdict(list)
     for tid, info in tid_info.items():
-        text = info['words']
+        words = info['words']
+        content = info['text']
+        while content[:2] == 'RT':
+            idx = content.find(':') + 2
+            content = content[idx:]
         date_rt = info['rtd']  # dictionary
         for date in date_rt:
-            date_corpus[date].append(text)
+            date_word_text[date].append(dict(words=words, text=content))
     with open('../data/retweet-2011/keywords.json', 'r') as f:
         date_keywords = json.load(f)
     # rearrange date
@@ -401,13 +409,14 @@ def generate_database(timestep=5, movestep=1):
     current = start
     while current <= end:
         kw_weight = collections.Counter()
-        corpuslist = []
+        # corpuslist = []
+        word_text_list = []
         for i in range(timestep):
             date = (current+datetime.timedelta(days=i)).strftime('%Y-%m-%d')
             # keywords
             kw_weight += collections.Counter(date_keywords[date])
             # corpus
-            corpuslist += date_corpus[date]
+            word_text_list += date_word_text[date]
         # keywords
         # remove big words
         for bw in bigwords:
@@ -416,10 +425,13 @@ def generate_database(timestep=5, movestep=1):
         kwscore = kw_weight.most_common(count)
         state_kwscore[current.strftime('%Y-%m-%d')] = kwscore
         # corpus
-        # remove the repeated word in each text
-        temp = set(map(tuple, corpuslist))  # {(), (), ()}
-        # state_corpus: [[word1, word2], [word3, word4, word5],]
-        state_corpus[current.strftime('%Y-%m-%d')] = list(map(list, temp))
+        # remove the repeated word in each words
+        for idx, word_text in enumerate(word_text_list):
+            words = list(tuple(word_text['words']))
+            text = word_text['text']
+            # [{words:[str1, str2, ], corpus: str}, {}]
+            word_text_list[idx] = dict(words=words, text=text)
+        state_corpus[current.strftime('%Y-%m-%d')] = word_text_list
         current += datetime.timedelta(days=movestep)
     with open('../data/retweet-2011/state_database.json', 'w') as f:
         json.dump(dict(corpus=state_corpus, kwscore=state_kwscore), f)

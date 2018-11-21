@@ -12,6 +12,7 @@ def tutorial_data():
     each group (5 groups)
     30 tweets
     3,4 | 5,6 | 7,8 | 9,10 | 11,12
+    create file: all data and sample (30) data
     '''
     with open('../data/retweet-2011/sample.json', 'r') as f:
         tid_info = json.load(f)

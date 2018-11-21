@@ -4,12 +4,12 @@ import * as cola from 'webcola'
 export default class Topiclayout {
   constructor() {
   }
-  initScene(graph) {
+  initScene(graph, wordText) {
     const margin = {top: 20, right: 10, bottom: 50, left:20},
       width = document.getElementById('topicview').offsetWidth-margin.left-margin.right,
       height = document.getElementById('topicview').offsetHeight-margin.top-margin.bottom
     const fontScale = d3.scaleLinear()
-      .range([7,15])
+      .range([5,10])
       .domain(d3.extent(graph.nodes, d => d.tf))
     const xScale = d3.scaleLinear()
       .range([0, width])
@@ -29,7 +29,7 @@ export default class Topiclayout {
       .attr('transform', `translate(${margin.left}, ${margin.top})`)
     const d3cola = cola.d3adaptor(d3)
       .avoidOverlaps(true)
-      // .flowLayout('x', 25)
+      .flowLayout('x', 25)
       .size([width, height])
       .nodes(graph.nodes)
       .links(graph.links)
@@ -45,6 +45,10 @@ export default class Topiclayout {
       .attr('stroke', '#A8A7A7')
       .attr('fill', 'none')
       .style('stroke-opacity', 0.2)
+      .on('click', d => {
+        console.log(d.source.word, d.target.word)
+
+      })
     // const node = g.append('g').selectAll('.node')
     //   .data(graph.nodes)
     //   .enter().append('g')
@@ -70,12 +74,32 @@ export default class Topiclayout {
       .attr('width', d => d.width)
       .attr('height', d => d.height)
       .style('fill', 'none')
+      .call(d3cola.drag)
+    const label = g.append('g').selectAll('.label')
+      .data(graph.nodes)
+      .enter().append('text')
+      .attr('class', 'topic-label')
+      .text(d => d.word)
+      .attr('fill', d => d.color)
+      .style('font-size', d => `${fontScale(d.tf)}px`)
+      .call(d3cola.drag)
+      .on('click', d => {
+        const res = []
+        wordText.forEach(dd => {
+          if(dd.words.includes(d.word)) {
+            res.push(dd.text)
+          }
+        })
+        console.log(res)
+      })
     d3cola.on('tick', function() {
       xScale.domain(d3.extent(graph.nodes, d => d.x))
       yScale.domain(d3.extent(graph.nodes, d => d.y))
       link.attr('d', d => `M${xScale(d.source.x)},${yScale(d.source.y)}L${xScale(d.target.x)},${yScale(d.target.y)}`)
       node.attr('x', d => xScale(d.x-d.width/2))
         .attr('y', d => yScale(d.y-d.height/2))
+      label.attr('x', d => xScale(d.x))
+        .attr('y', d => yScale(d.y+d.height/4))
     })
 
   }

@@ -59,18 +59,20 @@ class TopicResource(Resource):
             state_database = json.load(f)
         state_corpus = state_database['corpus']
         state_kwscore = state_database['kwscore']
-        corlist, kwlist = [], bigwords
+        wordslist, corlist, kwlist = [], [], bigwords
         for date in datelist:
-            corpuslist = state_corpus[date]
+            corpuslist = state_corpus[date]  # [{words:[] , text: str}, {}, {}]
             kwscorelist = state_kwscore[date]
-            corlist += [d for d in corpuslist if keyword in d]
+            wordslist += [
+                d['words'] for d in corpuslist if keyword in d['words']]
+            corlist += [d for d in corpuslist if keyword in d['words']]
             kwlist += [d[0] for d in kwscorelist]
         # corpus, kwscore = state_corpus[date], state_kwscore[date]
         # corlist = list(filter(lambda d: keyword in d, corpus))
         # kwlist = list(map(lambda d: d[0], kwscore)) + bigwords
-        _, roots = extract_sentences(corlist, kwlist, thres=100)
+        _, roots = extract_sentences(wordslist, kwlist, thres=30)
         graph = generate_graph(roots, kwlist)
-        return graph
+        return [graph, corlist]
 
 
 api.add_resource(TopicResource, '/topic/<parameters>')

@@ -111,11 +111,11 @@ export default {
 #topicview {
   position: relative;
   float: left;
-  width: 700px;
+  width: 500px;
   height: 500px;
 }
 #keywordview {
-  width: 1200px;
+  width: 100%;
   height: 300px;
 }
 #state-gui {

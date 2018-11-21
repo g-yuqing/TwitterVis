@@ -175,9 +175,10 @@ export default class Keywordlayout {
         const url = `http://0.0.0.0:5000/topic/${params.toString()}`
         axios.get(url)
           .then(res => {
-            const topicGraph = res.data
+            const topicGraph = res.data[0],
+              topicSentences = res.data[1]
             console.log('retreive topic graph data successfully')
-            tl.initScene(topicGraph)
+            tl.initScene(topicGraph, topicSentences)
             spinner.stop()
           })
       })
