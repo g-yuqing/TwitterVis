@@ -7,14 +7,15 @@ export default class Topiclayout {
   initScene(graph, wordText) {
     const margin = {top: 20, right: 10, bottom: 50, left:20},
       width = document.getElementById('topicview').offsetWidth-margin.left-margin.right,
-      height = document.getElementById('topicview').offsetHeight-margin.top-margin.bottom
+      height = (document.getElementById('topicview').offsetHeight-margin.top-margin.bottom),
+      graphHeight = height
     const fontScale = d3.scaleLinear()
       .range([5,10])
       .domain(d3.extent(graph.nodes, d => d.tf))
     const xScale = d3.scaleLinear()
       .range([0, width])
     const yScale = d3.scaleLinear()
-      .range([height, 0])
+      .range([graphHeight, 0])
     // empty previous visualization
     document.getElementById('topicview').innerHTML = ''
     // visualize
@@ -22,23 +23,22 @@ export default class Topiclayout {
       .attr('id', 'topic-svg')
       .attr('width', width + margin.left + margin.right)
       .attr('height', height + margin.top + margin.bottom)
-    const g = svg.append('g')
+    const graphG = svg.append('g')
       .attr('id', 'topic-g')
       .attr('width', width)
-      .attr('height', height)
+      .attr('height', graphHeight)
       .attr('transform', `translate(${margin.left}, ${margin.top})`)
     const d3cola = cola.d3adaptor(d3)
       .avoidOverlaps(true)
       .flowLayout('x', 25)
-      .size([width, height])
+      .size([width, graphHeight])
       .nodes(graph.nodes)
       .links(graph.links)
       .constraints(graph.constraints)
       .symmetricDiffLinkLengths(25)
       // .jaccardLinkLengths(30,0.7)
       .start(10, 20, 20)
-      // .start(10, 40, 80)
-    const link = g.append('g').selectAll('.link')
+    const link = graphG.append('g').selectAll('.link')
       .data(graph.links)
       .enter().append('path')
       .attr('class', 'topic-link')
@@ -47,27 +47,12 @@ export default class Topiclayout {
       .style('stroke-opacity', 0.2)
       .on('click', d => {
         console.log(d.source.word, d.target.word)
-
       })
-    // const node = g.append('g').selectAll('.node')
-    //   .data(graph.nodes)
-    //   .enter().append('g')
-    // node.append('text')
-    //   .text(d => d.word)
-    //   .attr('x', 0)
-    //   .attr('y', 3.5)
-    //   .attr('text-anchor', 'middle')
-    //   .attr('fill', d => d.color)
-    //   .style('font-size', d => `${fontScale(d.tf)}px`)
-    // d3cola.on('tick', function() {
-    //   link.attr('d', d => `M${d.target.x},${d.target.y}C${d.target.x},${(d.target.y+d.source.y)/2} ${d.source.x},${(d.target.y+d.source.y)/2} ${d.source.x},${d.source.y}`)
-    //   node.attr('transform', d => `translate(${d.x}, ${d.y})`)
-    // })
     graph.nodes.forEach(d => {
       d.width = 10*d.word.length,
       d.height = 10
     })
-    const node = g.append('g').selectAll('.node')
+    const node = graphG.append('g').selectAll('.node')
       .data(graph.nodes)
       .enter().append('rect')
       .attr('class', 'topic-node')
@@ -75,7 +60,7 @@ export default class Topiclayout {
       .attr('height', d => d.height)
       .style('fill', 'none')
       .call(d3cola.drag)
-    const label = g.append('g').selectAll('.label')
+    const label = graphG.append('g').selectAll('.label')
       .data(graph.nodes)
       .enter().append('text')
       .attr('class', 'topic-label')
@@ -83,14 +68,48 @@ export default class Topiclayout {
       .attr('fill', d => d.color)
       .style('font-size', d => `${fontScale(d.tf)}px`)
       .call(d3cola.drag)
-      .on('click', d => {
-        const res = []
+      .on('click', function(d) {
+        // empty
+        document.getElementById('tweetview').innerHTML = ''
+        d3.selectAll('.topic-label').attr('stroke', null)
+        // init
+        d3.select(this).attr('stroke', '#99B898')
+        const tweetData = []
+        const tweetSvg = d3.select(document.getElementById('tweetview')).append('svg')
+          .attr('id', 'tweet-svg')
+          .attr('width', width + margin.left + margin.right)
+          .attr('height', height)
+        const tweetG = tweetSvg.append('g')
+          .attr('id', 'topic-g')
+          .attr('width', width)
+          .attr('height', graphHeight)
+          .attr('transform', `translate(${margin.left}, ${margin.top})`)
+        const tempText = []
         wordText.forEach(dd => {
-          if(dd.words.includes(d.word)) {
-            res.push(dd.text)
+          if(dd.words.includes(d.word) && !tempText.includes(dd.words.toString())) {
+            tweetData.push({
+              text: dd.text,
+              count: dd.count})
+            tempText.push(dd.words.toString())
           }
         })
-        console.log(res)
+        tweetData.sort((a, b) => (a.count < b.count) ? 1 : ((b.count < a.count) ? -1 : 0))
+        tweetG.selectAll('.tweet')
+          .data(tweetData)
+          .enter().append('text')
+          .attr('class', 'tweet-text')
+          .text(d => d.count)
+          .attr('x', 0)
+          .attr('y', (d, i) => i*13)
+          .style('font-size', '10px')
+        tweetG.selectAll('.tweet')
+          .data(tweetData)
+          .enter().append('text')
+          .attr('class', 'tweet-text')
+          .text(d => d.text)
+          .attr('x', 30)
+          .attr('y', (d, i) => i*13)
+          .style('font-size', '10px')
       })
     d3cola.on('tick', function() {
       xScale.domain(d3.extent(graph.nodes, d => d.x))

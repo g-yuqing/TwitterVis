@@ -393,13 +393,15 @@ def generate_database(timestep=5, movestep=1):
     date_word_text = collections.defaultdict(list)
     for tid, info in tid_info.items():
         words = info['words']
+        count = info['count']
         content = info['text']
         while content[:2] == 'RT':
             idx = content.find(':') + 2
             content = content[idx:]
         date_rt = info['rtd']  # dictionary
         for date in date_rt:
-            date_word_text[date].append(dict(words=words, text=content))
+            date_word_text[date].append(dict(words=words, text=content,
+                                             count=count))
     with open('../data/retweet-2011/keywords.json', 'r') as f:
         date_keywords = json.load(f)
     # rearrange date
@@ -429,8 +431,9 @@ def generate_database(timestep=5, movestep=1):
         for idx, word_text in enumerate(word_text_list):
             words = list(tuple(word_text['words']))
             text = word_text['text']
+            count = word_text['count']
             # [{words:[str1, str2, ], corpus: str}, {}]
-            word_text_list[idx] = dict(words=words, text=text)
+            word_text_list[idx] = dict(words=words, text=text, count=count)
         state_corpus[current.strftime('%Y-%m-%d')] = word_text_list
         current += datetime.timedelta(days=movestep)
     with open('../data/retweet-2011/state_database.json', 'w') as f:

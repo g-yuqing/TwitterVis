@@ -4,6 +4,9 @@
     <stateview></stateview>
     <!-- topic view -->
     <div id="topicview"></div>
+    <div id="tweetview">
+
+    </div>
     <!-- keyword view -->
     <keywordview></keywordview>
   </div>
@@ -12,7 +15,6 @@
 <script>
 import * as d3 from 'd3'
 import * as dat from 'dat.gui'
-// import Topiclayout from './scripts/topiclayout'
 import StateView from './components/StateView'
 import KeywordView from './components/KeywordView'
 
@@ -105,14 +107,14 @@ export default {
   color: #2c3e50;
 }
 #stateview {
-  width: 500px;
+  width: 35%;
   height: 500px;
 }
 #topicview {
   position: relative;
   float: left;
-  width: 500px;
-  height: 500px;
+  width: 65%;
+  height: 250px;
 }
 #keywordview {
   width: 100%;
@@ -122,5 +124,12 @@ export default {
   position: absolute;
   top: 2px;
   left: 2px;
+}
+#tweetview {
+  position: relative;
+  float: left;
+  width: 65%;
+  height: 220px;
+  overflow: auto;
 }
 </style>
