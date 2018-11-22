@@ -7,6 +7,7 @@ export default class Statelayout {
   constructor() {
   }
   initScene(stateData, keywordData) {
+    document.getElementById('stateview').innerHTML = ''
     this.nodes = stateData.nodes
     this.links = stateData.links
     const margin = {top: 70, right: 50, bottom: 10, left:20},
@@ -48,11 +49,11 @@ export default class Statelayout {
       .on('start brush', brushed)
       .on('end', brushended)
     function brushed() {
-      console.log('selecting')
+      // console.log('selecting')
     }
     function brushended() {
       if(!d3.event.selection) {
-        console.log('brushended')
+        // console.log('brushended')
       }
       else {
         const data = []
@@ -135,6 +136,8 @@ export default class Statelayout {
       .style('fill', (d, i) => colorScale(i))
     // legend
     // time bar
+    const dateRange = d3.extent(this.nodes, d => new Date(d.date))
+    const formatTime = d3.timeFormat('%Y-%m-%d')
     const legendMargin = {top: 20},
       legendWidth = 300,
       legendHeight = 10
@@ -155,14 +158,14 @@ export default class Statelayout {
       .attr('y', graphHeight+legendMargin.top+legendHeight*2)
       .style('font-size', '0.5em')
       .style('text-anchor', 'start')
-      .text('2011-3-11')
+      .text(formatTime(dateRange[0]))
     timeLegendG.append('text')
       .attr('class', 'mono')
       .attr('x', legendWidth)
       .attr('y', graphHeight+legendMargin.top+legendHeight*2)
       .style('font-size', '0.5em')
       .style('text-anchor', 'end')
-      .text('2011-12-31')
+      .text(formatTime(dateRange[1]))
   }
   // updateNode(valIdxs) {
   //   this.stateNode.each(function(d) {

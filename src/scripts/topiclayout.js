@@ -7,15 +7,14 @@ export default class Topiclayout {
   initScene(graph, wordText) {
     const margin = {top: 20, right: 10, bottom: 50, left:20},
       width = document.getElementById('topicview').offsetWidth-margin.left-margin.right,
-      height = (document.getElementById('topicview').offsetHeight-margin.top-margin.bottom),
-      graphHeight = height
+      height = (document.getElementById('topicview').offsetHeight-margin.top-margin.bottom)
     const fontScale = d3.scaleLinear()
       .range([5,10])
       .domain(d3.extent(graph.nodes, d => d.tf))
     const xScale = d3.scaleLinear()
       .range([0, width])
     const yScale = d3.scaleLinear()
-      .range([graphHeight, 0])
+      .range([height, 0])
     // empty previous visualization
     document.getElementById('topicview').innerHTML = ''
     // visualize
@@ -26,12 +25,12 @@ export default class Topiclayout {
     const graphG = svg.append('g')
       .attr('id', 'topic-g')
       .attr('width', width)
-      .attr('height', graphHeight)
+      .attr('height', height)
       .attr('transform', `translate(${margin.left}, ${margin.top})`)
     const d3cola = cola.d3adaptor(d3)
       .avoidOverlaps(true)
       .flowLayout('x', 25)
-      .size([width, graphHeight])
+      .size([width, height])
       .nodes(graph.nodes)
       .links(graph.links)
       .constraints(graph.constraints)
@@ -73,18 +72,8 @@ export default class Topiclayout {
         document.getElementById('tweetview').innerHTML = ''
         d3.selectAll('.topic-label').attr('stroke', null)
         // init
-        d3.select(this).attr('stroke', '#99B898')
-        const tweetData = []
-        const tweetSvg = d3.select(document.getElementById('tweetview')).append('svg')
-          .attr('id', 'tweet-svg')
-          .attr('width', width + margin.left + margin.right)
-          .attr('height', height)
-        const tweetG = tweetSvg.append('g')
-          .attr('id', 'topic-g')
-          .attr('width', width)
-          .attr('height', graphHeight)
-          .attr('transform', `translate(${margin.left}, ${margin.top})`)
         const tempText = []
+        const tweetData = []
         wordText.forEach(dd => {
           if(dd.words.includes(d.word) && !tempText.includes(dd.words.toString())) {
             tweetData.push({
@@ -94,15 +83,33 @@ export default class Topiclayout {
           }
         })
         tweetData.sort((a, b) => (a.count < b.count) ? 1 : ((b.count < a.count) ? -1 : 0))
-        tweetG.selectAll('.tweet')
+
+        d3.select(this).attr('stroke', '#99B898')
+        const tableWidth = (width + margin.left + margin.right)*1.5,
+          tableHeight = tweetData.length * 20
+        const tweetSvg = d3.select(document.getElementById('tweetview')).append('svg')
+          .attr('id', 'tweet-svg')
+          .attr('width', tableWidth)
+          .attr('height', tableHeight)
+          // .attr('overflow', 'auto')
+        const tweetG = tweetSvg.append('g')
+          .attr('id', 'topic-g')
+          .attr('width', tableWidth)
+          .attr('height', tableHeight)
+          .attr('transform', `translate(${margin.left}, ${margin.top})`)
+
+        tweetG
+          .selectAll('.tweet')
           .data(tweetData)
-          .enter().append('text')
+          .enter()
+          .append('text')
           .attr('class', 'tweet-text')
           .text(d => d.count)
           .attr('x', 0)
           .attr('y', (d, i) => i*25)
           .style('font-size', '10px')
-        tweetG.selectAll('.tweet')
+        tweetG
+          .selectAll('.tweet')
           .data(tweetData)
           .enter().append('text')
           .attr('class', 'tweet-text')

@@ -4,9 +4,7 @@
     <stateview></stateview>
     <!-- topic view -->
     <div id="topicview"></div>
-    <div id="tweetview">
-
-    </div>
+    <div id="tweetview"></div>
     <!-- keyword view -->
     <keywordview></keywordview>
   </div>
@@ -38,18 +36,26 @@ export default {
         // state
         // state - init gui dat
         const guiData = {
-          dataset: 'path0',
+          dataset: '',
           ShowGroups: false,
           ChangeView: false,
         }
         this.gui.domElement.id = 'state-gui'
         this.gui.add(guiData, 'dataset', {
-          '2011': 'path0',
-          'GroupA': 'path1',
-          'GroupB': 'path2',
-          'GroupC': 'path3',
-          'GroupD': 'path4',
-          'GroupE': 'path5',
+          '2011': '0-295',
+          'GroupA': '0-50',
+          'GroupB': '51-111',
+          'GroupC': '112-173',
+          'GroupD': '174-234',
+          'GroupE': '235-291',  // to 12/27
+        }).onChange(val => {
+          const ext = val.split('-'),
+            start = +ext[0],
+            end = +ext[1]
+          const stateData = {
+            nodes: this.stateData.nodes.slice(start, end+1),
+            links: this.stateData.links.slice(start, end)}
+          this.eventHub.$emit('initStateView', stateData, this.keywordData)
         })
         this.gui.add(guiData, 'ShowGroups').onChange(val => {
           if(val) {
@@ -67,12 +73,9 @@ export default {
         //     this.eventHub.$emit('resetOriginView')
         //   }
         // })
-        document.getElementById('stateview').appendChild(this.gui.domElement)
-        this.drawStateView()
-        // topic
-        // this.topiclayout.initScene(this.topicData)
-        // keyword
-        // this.drawKeywordView(this.keywordData.period)
+        // state - graph view
+        document.getElementById('app').appendChild(this.gui.domElement)
+        // this.eventHub.$emit('initStateView', this.stateData, this.keywordData)
       })
   },
   watch: {
