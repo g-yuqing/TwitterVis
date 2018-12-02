@@ -91,7 +91,6 @@ export default class Topiclayout {
           .attr('id', 'tweet-svg')
           .attr('width', tableWidth)
           .attr('height', tableHeight)
-          // .attr('overflow', 'auto')
         const tweetG = tweetSvg.append('g')
           .attr('id', 'topic-g')
           .attr('width', tableWidth)
@@ -117,6 +116,9 @@ export default class Topiclayout {
           .attr('x', 30)
           .attr('y', (d, i) => i*25)
           .style('font-size', '10px')
+        tweetData.forEach(d => {
+          console.log(d)
+        })
       })
     d3cola.on('tick', function() {
       xScale.domain(d3.extent(graph.nodes, d => d.x))

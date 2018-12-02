@@ -2,11 +2,11 @@
   <div id="app">
     <!-- state view -->
     <stateview></stateview>
+    <!-- keyword view -->
+    <keywordview></keywordview>
     <!-- topic view -->
     <div id="topicview"></div>
     <div id="tweetview"></div>
-    <!-- keyword view -->
-    <keywordview></keywordview>
   </div>
 </template>
 
@@ -36,18 +36,19 @@ export default {
         // state
         // state - init gui dat
         const guiData = {
-          dataset: '',
+          '2011': '',
           ShowGroups: false,
           ChangeView: false,
         }
         this.gui.domElement.id = 'state-gui'
-        this.gui.add(guiData, 'dataset', {
-          '2011': '0-295',
-          'GroupA': '0-50',
-          'GroupB': '51-111',
-          'GroupC': '112-173',
-          'GroupD': '174-234',
-          'GroupE': '235-291',  // to 12/27
+        const dateSelector = this.gui.addFolder('dataset')
+        dateSelector.add(guiData, '2011', {
+          '2011': '0-291',
+          'Mar. Apr.': '0-50',
+          'May. Jun.': '51-111',
+          'Jul. Aug.': '112-173',
+          'Sep. Oct.': '174-234',
+          'Nov. Dec.': '235-291',  // to 12/27
         }).onChange(val => {
           const ext = val.split('-'),
             start = +ext[0],
@@ -58,24 +59,11 @@ export default {
           this.eventHub.$emit('initStateView', stateData, this.keywordData)
         })
         this.gui.add(guiData, 'ShowGroups').onChange(val => {
-          if(val) {
-            this.eventHub.$emit('showGroups')
-          }
-          else {
-            this.eventHub.$emit('hideGroups')
-          }
+          this.eventHub.$emit('switchStateShowGroups', val)
+          this.eventHub.$emit('switchKeywordShowGroups', val)
         })
-        // this.gui.add(guiData, 'ChangeView').onChange(val => {
-        //   if(val) {
-        //     this.eventHub.$emit('updateStateView')
-        //   }
-        //   else {
-        //     this.eventHub.$emit('resetOriginView')
-        //   }
-        // })
         // state - graph view
         document.getElementById('app').appendChild(this.gui.domElement)
-        // this.eventHub.$emit('initStateView', this.stateData, this.keywordData)
       })
   },
   watch: {
@@ -110,7 +98,13 @@ export default {
   color: #2c3e50;
 }
 #stateview {
-  width: 35%;
+  position: relative;
+  float: left;
+  width: 30%;
+  height: 500px;
+}
+#keywordview {
+  width: 65%;
   height: 500px;
 }
 #topicview {
@@ -118,10 +112,6 @@ export default {
   float: left;
   width: 65%;
   height: 250px;
-}
-#keywordview {
-  width: 100%;
-  height: 300px;
 }
 #state-gui {
   position: absolute;

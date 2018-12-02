@@ -16,17 +16,21 @@ export default {
     this.eventHub.$on('initStateView', (stateData, keywordData) => this.sl.initScene(stateData, keywordData))
     this.eventHub.$on('updateStateView', () => this.sl.updateStateView())
     this.eventHub.$on('resetOriginView', () => this.sl.resetOriginView())
-    this.eventHub.$on('showGroups', () => this.sl.showGroups())
-    this.eventHub.$on('hideGroups', () => this.sl.hideGroups())
+    this.eventHub.$on('switchStateShowGroups', opt => this.sl.switchShowGroups(opt))
   }
 }
 </script>
 
 <style>
-  #stateview {
-    position: relative;
-    float: left;
-    -webkit-filter: drop-shadow( 0px 3px 3px rgba(0,0,0,.3) );
-    filter: drop-shadow( 0px 3px 3px rgba(0,0,0,.25) )
-  }
+#stateview {
+  position: relative;
+  float: left;
+  -webkit-filter: drop-shadow( 0px 3px 3px rgba(0,0,0,.3) );
+  filter: drop-shadow( 0px 3px 3px rgba(0,0,0,.25) )
+}
+.stateview-text {
+  font-family: "Times New Roman", Times, serif;
+  font-weight: bold;
+  font-size: 10px;
+}
 </style>

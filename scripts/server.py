@@ -8,7 +8,6 @@ from flask_cors import CORS
 
 app = Flask(__name__)
 api = Api(app)
-# cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 CORS(app)
 with open('../data/retweet-2011/state_database.json', 'r') as f:
     state_database = json.load(f)
