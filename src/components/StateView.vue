@@ -14,8 +14,7 @@ export default {
   },
   mounted() {
     this.eventHub.$on('initStateView', (stateData, keywordData) => this.sl.initScene(stateData, keywordData))
-    this.eventHub.$on('updateStateView', () => this.sl.updateStateView())
-    this.eventHub.$on('resetOriginView', () => this.sl.resetOriginView())
+    this.eventHub.$on('switchStateDimension', opt => this.sl.switchDimension(opt))
     this.eventHub.$on('switchStateShowGroups', opt => this.sl.switchShowGroups(opt))
   }
 }

@@ -6,6 +6,7 @@
     <keywordview></keywordview>
     <!-- topic view -->
     <div id="topicview"></div>
+    <!-- <div id="wordburst"></div> -->
     <div id="tweetview"></div>
   </div>
 </template>
@@ -32,15 +33,22 @@ export default {
       .then(dataset => {
         this.keywordData = dataset.keyword  // {period: {date: [[kw, score],]}, keywords:[[kw: score], []]}
         this.stateData = dataset.state  // {nodes:[], links: []}
-        this.topicData = dataset.topic  // {date1: [{tid, text,count, tpc}, {}],}
+        // this.topicData = dataset.topic  // {date1: [{tid, text,count, tpc}, {}],}
         // state
         // state - init gui dat
         const guiData = {
+          TopicNumbers: 20,
+          TimeSpan: 5,
+          Submit: false,
           '2011': '',
           ShowGroups: false,
-          ChangeView: false,
+          ChangeDimension: false,
         }
         this.gui.domElement.id = 'state-gui'
+        const stateParam = this.gui.addFolder('parameters')
+        stateParam.add(guiData, 'TopicNumbers', 1, 80, 1)
+        stateParam.add(guiData, 'TimeSpan', 1, 14, 1)
+        stateParam.add(guiData, 'Submit')
         const dateSelector = this.gui.addFolder('dataset')
         dateSelector.add(guiData, '2011', {
           '2011': '0-291',
@@ -62,6 +70,9 @@ export default {
           this.eventHub.$emit('switchStateShowGroups', val)
           this.eventHub.$emit('switchKeywordShowGroups', val)
         })
+        this.gui.add(guiData, 'ChangeDimension').onChange(val => {
+          this.eventHub.$emit('switchStateDimension', val)
+        })
         // state - graph view
         document.getElementById('app').appendChild(this.gui.domElement)
       })
@@ -74,12 +85,12 @@ export default {
       const keywordData = await res.json()
       const res1 = await fetch('../static/state_graph.json')
       const stateData = await res1.json()
-      const res2 = await fetch('../static/topic_graph.json')
-      const topicData = await res2.json()
+      // const res2 = await fetch('../static/topic_graph.json')
+      // const topicData = await res2.json()
       return {
         keyword: keywordData,
         state: stateData,
-        topic: topicData
+        // topic: topicData
       }
     },
     // layout methods
@@ -101,16 +112,21 @@ export default {
   position: relative;
   float: left;
   width: 30%;
-  height: 500px;
+  height: 600px;
 }
+/* #keyword-tendency {
+  position: relative;
+  float:left;
+  width: 170px;
+  height: 600px;
+  overflow: auto;
+} */
 #keywordview {
-  width: 65%;
-  height: 500px;
 }
 #topicview {
   position: relative;
   float: left;
-  width: 65%;
+  width: 40%;
   height: 250px;
 }
 #state-gui {
@@ -121,8 +137,14 @@ export default {
 #tweetview {
   position: relative;
   float: left;
-  width: 65%;
-  height: 220px;
+  width: 900;
+  height: 300px;
   overflow: auto;
+}
+#wordburst {
+  position: relative;
+  float: left;
+  width: 900px;
+  height: 900px;
 }
 </style>

@@ -5,6 +5,7 @@ import random
 import csv
 import numpy as np
 import networkx as nx
+from gensim.summarization import keywords
 
 
 def tutorial_data():
@@ -70,12 +71,17 @@ def tutorial_data():
 
 
 def extract_keywords():
+    # kw_weight = collections.Counter()
     for group in ['A', 'B', 'C', 'D', 'E']:
+        print(group)
         filepath = '../data/retweet-2011/test/'+group
         with open(filepath+'/sample.json', 'r') as f:
             dataset = json.load(f)
         term_score = collections.defaultdict(float)
-        term_count = collections.defaultdict(int)
+        # count of tweets contain word
+        term_int_count = collections.defaultdict(int)
+        # retweet count of word
+        term_rt_count = collections.defaultdict(int)
         wordlist = []
         retweet_count = 0
         tweet_count = 0
@@ -83,37 +89,104 @@ def extract_keywords():
             retweet_count += info['count']
             tweet_count += 1
         for tid, info in dataset.items():
+            if tid == '143362328841306112':
+                print('wrong data')
+                continue
             words = info['words']
             count = info['count']
-            wordlist.append(words)
+            for _ in range(count):
+                wordlist.append(words)
             wordlen = len(words)
             nr_words = list(set(words))
             for nr_word in nr_words:
                 tf = words.count(nr_word)/wordlen
-                rtc = count/retweet_count
-                term_score[nr_word] += (tf * rtc)
-                term_count[nr_word] += 1
-        for term, score in term_count.items():
-            twc = term_count[term]
-            exp = np.exp(twc/tweet_count)
-            term_score[term] *= exp
+                term_score[nr_word] += tf
+                term_rt_count[nr_word] += count
+                term_int_count[nr_word] += 1
+        for term, score in term_score.items():
+            tic = term_int_count[term]  # count of tweets include nr_word
+            trc = term_rt_count[term]  # retweet count of word
+            exp = np.exp(tic/tweet_count)
+            term_score[term] *= (exp*trc/retweet_count)
+        for key, val in term_score.items():
+            if len(key) <= 1 or key == 'たち' or key == 'さん' or\
+                    key == 'そう' or key == '今日' or key == '日本':
+                term_score[key] = 0.0
+        # kw_weight += collections.Counter(term_score)
         with open(filepath+'/keywords.json', 'w') as f:
             json.dump(term_score, f)
-        graph = nx.DiGraph()
-        for words in wordlist:
-            combs = combinations(words, 2)
-            for comb in combs:
-                graph.add_edge(comb[0], comb[1],
-                               weight=term_score[comb[0]])
-                graph.add_edge(comb[1], comb[0],
-                               weight=term_score[comb[1]])
-        pr = nx.pagerank(graph)
-        for term, score in pr.items():
-            term_score[term] = score
-        with open(filepath+'/keywords-pr.json', 'w') as f:
-            json.dump(term_score, f)
+        d = sorted(term_score.items(), key=lambda kv: kv[1])[-20:]
+        # for i in d[::-1]:
+        #     print(i[0])
+        # test textrank
+        print('============================')
+        wholetext = ''
+        for word in wordlist:
+            temp = ' '.join(word)
+            wholetext += (temp+' ')
+        res = keywords(wholetext).split('\n')
+        for r in res:
+            print(r)
+
+
+def evaluate():
+    infolist = []
+    for group in ['A', 'B', 'C', 'D', 'E']:
+        filepath = '../data/retweet-2011/test/'+group
+        with open(filepath+'/sample.json', 'r') as f:
+            dataset = json.load(f)
+        for _, info in dataset.items():
+            infolist.append(dict(count=info['count'], words=info['words']))
+    term_score = collections.defaultdict(float)
+    # count of tweets contain word
+    term_int_count = collections.defaultdict(int)
+    # retweet count of word
+    term_rt_count = collections.defaultdict(int)
+
+    wordlist = []
+    retweet_count = 0
+    tweet_count = 0
+    for info in infolist:
+        retweet_count += info['count']
+        tweet_count += 1
+    for info in infolist:
+        words = info['words']
+        count = info['count']
+        wordlist.append(words)
+        wordlen = len(words)
+        nr_words = list(set(words))
+        for nr_word in nr_words:
+            tf = words.count(nr_word)/wordlen
+            term_score[nr_word] += tf
+            term_rt_count[nr_word] += count
+            term_int_count[nr_word] += 1
+    for term, score in term_score.items():
+        tic = term_int_count[term]  # count of tweets include nr_word
+        trc = term_rt_count[term]  # retweet count of word
+        exp = np.exp(tic/tweet_count+trc/retweet_count)
+        term_score[term] *= exp
+    for key, val in term_score.items():
+        if len(key) <= 1 or key == 'たち' or key == 'さん' or\
+                key == 'そう' or key == '今日' or key == '日本':
+            term_score[key] = 0.0
+    with open(filepath+'/keywords.json', 'w') as f:
+        json.dump(term_score, f)
+    print('mine')
+    d = sorted(term_score.items(), key=lambda kv: kv[1])[-20:]
+    for i in d[::-1]:
+        print(i[0])
+    # test textrank
+    print('pagerank')
+    wholetext = ''
+    for word in wordlist:
+        temp = ' '.join(word)
+        wholetext += (temp+' ')
+    res = keywords(wholetext).split('\n')
+    for r in res:
+        print(r)
 
 
 if __name__ == '__main__':
     # tutorial_data()
     extract_keywords()
+    # evaluate()

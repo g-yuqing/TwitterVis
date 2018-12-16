@@ -1,15 +1,29 @@
 import * as d3 from 'd3'
 import * as cola from 'webcola'
+import Sunburst from 'sunburst-chart'
+
 
 export default class Topiclayout {
   constructor() {
   }
   initScene(graph, wordText) {
+    // const colorScale = ['#99B898', '#FECEAB', '#FF847C', '#E84A5F']
+    // document.getElementById('wordburst').innerHTML = ''
+    // const wordburst = Sunburst()
+    // wordburst.data(graph)
+    //   .width(document.getElementById('wordburst').offsetWidth)
+    //   .height(document.getElementById('wordburst').offsetHeight)
+    //   .color(d => {
+    //     const depth = d.__dataNode.depth
+    //     return depth==0?'#E84A5F':colorScale[depth%3]}
+    //   )
+    //   .onNodeClick((d,i) => {console.log(d, i)})(document.getElementById('wordburst'))
+
     const margin = {top: 20, right: 10, bottom: 50, left:20},
       width = document.getElementById('topicview').offsetWidth-margin.left-margin.right,
       height = (document.getElementById('topicview').offsetHeight-margin.top-margin.bottom)
     const fontScale = d3.scaleLinear()
-      .range([5,10])
+      .range([10,20])
       .domain(d3.extent(graph.nodes, d => d.tf))
     const xScale = d3.scaleLinear()
       .range([0, width])
@@ -43,7 +57,7 @@ export default class Topiclayout {
       .attr('class', 'topic-link')
       .attr('stroke', '#A8A7A7')
       .attr('fill', 'none')
-      .style('stroke-opacity', 0.2)
+      .style('stroke-opacity', 0.7)
       .on('click', d => {
         console.log(d.source.word, d.target.word)
       })
@@ -96,7 +110,6 @@ export default class Topiclayout {
           .attr('width', tableWidth)
           .attr('height', tableHeight)
           .attr('transform', `translate(${margin.left}, ${margin.top})`)
-
         tweetG
           .selectAll('.tweet')
           .data(tweetData)
@@ -116,9 +129,6 @@ export default class Topiclayout {
           .attr('x', 30)
           .attr('y', (d, i) => i*25)
           .style('font-size', '10px')
-        tweetData.forEach(d => {
-          console.log(d)
-        })
       })
     d3cola.on('tick', function() {
       xScale.domain(d3.extent(graph.nodes, d => d.x))
@@ -129,6 +139,33 @@ export default class Topiclayout {
       label.attr('x', d => xScale(d.x))
         .attr('y', d => yScale(d.y+d.height/4))
     })
-
+  }
+  createBarChart(data, svg, offset) {
+    // data: [{date: count}, {}]
+    const width = 100,
+      height = 10,
+      datelist = data.datelist
+    const xScale = d3.scaleBand()
+      .domain(datelist[0], datelist[datelist.length-1])
+      .range([0, width])
+      .paddingInner(0.01)
+    const xAxis = d3.axisBottom()
+      .scale(xScale)
+    const yScale = d3.scaleLinear()
+      .domain(d3.extent(data, d=>d.rtc))
+      .range([height, 0])
+    const chartG = svg.append('g')
+      .attr('transform', `translate(0, ${offset})`)
+    chartG.append('g')
+      .attr('class', 'rt-chart-axis')
+      .call(xAxis)
+    chartG.selectAll('.rt-chart-bar')
+      .data(data)
+      .enter().append('rect')
+      .attr('class', 'rt-chart-bar')
+      .attr('x', d => xScale(d.date))
+      .attr('width', xScale.bandwidth())
+      .attr('y', d => yScale(d.count))
+      .attr('height', d => height - yScale(d.count))
   }
 }

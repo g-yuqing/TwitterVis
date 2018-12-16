@@ -34,18 +34,23 @@ export default {
   font-weight: bold;
   font-size: 7px;
 }
+.keyword-overview-node {
+  font-family: "Times New Roman", Times, serif;
+  font-weight: bold;
+  font-size: 7px;
+}
 #keyword-tendency {
   position: relative;
   float:left;
-  width: 250px; /*150+200*/
-  height: 450px;
+  width: 150px;
+  height: 600px;
   overflow: auto;
 }
 #keyword-overview {
   position: relative;
   float: left;
-  width: 650px;
-  height: 450px;
+  width: 1150px;
+  height: 600px;
   overflow: auto;
 }
 </style>

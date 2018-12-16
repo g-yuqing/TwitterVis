@@ -7,11 +7,12 @@ import Topiclayout from './topiclayout'
 export default class Keywordlayout {
   constructor() {
   }
-  initScene(keywordData, hullDates) {
+  initScene(keywordData, dateHull) {
     // keywordData: [{date: '', kwscore: [['kw', 'score'], ['kw', 'score']]}]
-    // hullDates: {group: [date1, date2]}
+    // dateHull: {date: {group, state}}
     const datelist = keywordData.map(d => d.date),
       tl = new Topiclayout(),
+
       loadOpt = {
         lines: 9, // The number of lines to draw
         length: 9, // The length of each line
@@ -72,11 +73,11 @@ export default class Keywordlayout {
       }
     }
     // render
-    const tdyWidth = 250,
+    const tdyWidth = 300,
       tdyTopPadding = 20,
-      tdyLeftPadding = 80,
-      tdyBottomPadding = 10,
-      tdySubHeight = 50,
+      tdyLeftPadding = 50,
+      tdyBottomPadding = 5,
+      tdySubHeight = 30,
       tdyCellHeight = tdyBottomPadding+tdySubHeight,
       tdyHeight = sortKwScore.length * (tdyBottomPadding+tdySubHeight),
       keywords = sortKwScore.map(d => d[0])
@@ -177,7 +178,7 @@ export default class Keywordlayout {
     // ============================ init keyword-overview ============================
     // changed word : #99B898 else: #FECEAB
     // leap date: #E84A5F else: #2A3633B
-    const overMargin = {top: 60, right: 10, bottom: 50, left:50},
+    const overMargin = {top: 60, right: 10, bottom: 10, left:50},
       overColWidth = 60,
       overWidth = datelist.length * overColWidth,
       overHeight = document.getElementById('keyword-overview').offsetHeight-overMargin.top-overMargin.bottom
@@ -194,7 +195,7 @@ export default class Keywordlayout {
     const overNodes = []
     let overLinks = []
     const topWordCoords = {},
-      topCount = 10,
+      topCount = 15,
       dateScore = {}
     keywordData.forEach(dateKwscore => {  // keywordData: [{date: '', kwscore: [['kw', 'score'], ['kw', 'score']]}]
       const date = dateKwscore.date,
@@ -217,7 +218,7 @@ export default class Keywordlayout {
     const overXScale = d3.scaleBand()
       .domain(datelist)
       .range([0, overWidth])
-      .paddingInner(0.0)
+      .paddingInner(0.03)
     const overYScales = {}
     for(const date of datelist) {
       const overYScale = d3.scaleLinear()
@@ -263,12 +264,25 @@ export default class Keywordlayout {
       .attr('transform', `translate(${overMargin.left}, ${overMargin.top/3})`)
       .attr('width', overWidth)
       .attr('height', overMargin.top)
-    const titleData = datelist.map((d, i) => {
+    let prevGroup = 0,
+      prevColor = '#A8A7A7',
+      diffColor = '#363636'
+    const titleData = datelist.map(d => {
+      const curGroup = dateHull[d].group
+      let curColor = diffColor
+      if(prevGroup==curGroup) {
+        curColor = prevColor
+      }
+      else {
+        prevGroup = curGroup
+        diffColor = prevColor
+        prevColor = curColor
+      }
       return {
         x: overXScale(d),
         y: 0,
         text: d,
-        color: (i%2==0?'#2A3633B':'#474747')
+        color: curColor
       }
     })
     overTitleG.append('g').selectAll ('.title').data(titleData)
@@ -281,22 +295,16 @@ export default class Keywordlayout {
       .style('text-anchor', 'middle')
       .style('font-size', '10px')
     // draw background
-    const overBackground = overG.append('g')
-      .attr('transform', `translate(${-overXScale.bandwidth()/2}, -12)`)
-    const dateColor = {}
+    const overBackground = overTitleG.append('g')
+      .attr('transform', `translate(${-overXScale.bandwidth()/2}, 3)`)
     const hullColor = ['#99B898', '#FECEAB', '#FF847C', '#E84A5F']
-    for(const [group, datelist] of Object.entries(hullDates)) {
-      for(const date of datelist) {
-        dateColor[date] = hullColor[(+group)%4]
-      }
-    }
     overBackground.selectAll('.background').data(datelist)
       .enter().append('rect')
       .attr('class', 'keyword-background')
       .attr('x', d => overXScale(d))
       .attr('width', overXScale.bandwidth())
-      .attr('height', overHeight+15)
-      .attr('fill', d => dateColor[d])
+      .attr('height', 3)
+      .attr('fill', d => hullColor[dateHull[d].state])
       .attr('fill-opacity', 0)
     // draw link
     const overLine = d3.line()
@@ -315,7 +323,7 @@ export default class Keywordlayout {
     // draw nodes
     overG.append('g').selectAll('.dot').data(overNodes)
       .enter().append('text')
-      .attr('class', 'keyword-text')
+      .attr('class', 'keyword-overview-node')
       .text(d => d.word)
       .attr('x', d => d.x)
       .attr('y', d => d.y)
@@ -351,6 +359,7 @@ export default class Keywordlayout {
           .then(res => {
             const topicGraph = res.data[0],
               topicSentences = res.data[1]
+            console.log(topicGraph)
             console.log('retreive topic graph data successfully')
             tl.initScene(topicGraph, topicSentences)
             spinner.stop()
@@ -358,6 +367,6 @@ export default class Keywordlayout {
       })
   }
   switchShowGroups(opt) {
-    opt ? (d3.selectAll('.keyword-background').style('fill-opacity', 0.3)) : (d3.selectAll('.keyword-background').style('fill-opacity', 0))
+    opt ? (d3.selectAll('.keyword-background').style('fill-opacity', 0.9)) : (d3.selectAll('.keyword-background').style('fill-opacity', 0))
   }
 }

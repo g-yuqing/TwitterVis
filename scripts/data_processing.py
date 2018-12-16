@@ -22,7 +22,7 @@ def csv2json():
     filepath = '../data/retweet-2011/retweet-2011.csv'
     dataset = pd.read_csv(filepath).values  # tid,date,infl,user,text,count
     tid_info = collections.defaultdict(dict)
-    print(len(dataset))
+    print(len(dataset))  # output: 2442789
     for data in dataset:
         # for json dump
         tid, author, text, count = str(data[0]), int(data[2]),\
@@ -43,7 +43,7 @@ def csv2json():
             # and fields[2] == '一般'
             if fields[0] == '名詞' and\
                     fields[1] != '代名詞' and fields[1] != '連体化' and\
-                    fields[1] != '非自立':
+                    fields[1] != '非自立' and fields[1] != '形容動詞語幹':
                 word = node.surface
                 if is_japanese(word):
                     tid_info[tid]['words'].append(word)
@@ -53,7 +53,7 @@ def csv2json():
     for data in dataset:
         tid, date = str(data[0]), str(data[1])
         tid_info[tid]['rtd'][date] += 1
-    print(len(tid_info))
+    print(len(tid_info))  # output: 981812
     # return tweet_id
     with open('../data/retweet-2011/tweet_info.json', 'w') as f:
         json.dump(tid_info, f)

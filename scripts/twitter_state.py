@@ -1,17 +1,16 @@
-# import collections
+import collections
 import json
 import numpy as np
-import collections
 from sklearn.cluster import DBSCAN
 from sklearn import manifold
 from sklearn.decomposition import PCA
-from twitter_keyword import create_period_keyword
+from twitter_keyword import create_period_keyword_whole
 
 
 def state_graph(count=20, timestep=5, movestep=1):
     # calculate keywords
     period_kwscore, keyword_score =\
-        create_period_keyword(count, timestep, movestep)
+        create_period_keyword_whole(count, timestep, movestep, False)
     print([d[0] for d in keyword_score])
     # vectorize
     allkeywords = list(map(lambda d: d[0], keyword_score))
@@ -36,14 +35,10 @@ def state_graph(count=20, timestep=5, movestep=1):
     tsne = manifold.TSNE(n_components=2, perplexity=5,
                          early_exaggeration=12, random_state=0)
     tsnepos = tsne.fit_transform(graph)
-    pca = PCA(n_components=1)
-    pcapos = pca.fit_transform(graph)
-    print(pca.explained_variance_ratio_)
-    print(pca.n_components_)
-    for tpos, ppos, g, d, r in\
-            zip(tsnepos, pcapos, graph, datelist, ratiolist):
+    for tpos, g, d, r in\
+            zip(tsnepos, graph, datelist, ratiolist):
         nodes.append(dict(x=float(tpos[0]), y=float(tpos[1]),
-                          pca=float(ppos[0]), date=d, kw=g.tolist(), ratio=r))
+                          date=d, kw=g.tolist(), ratio=r))
     # links
     links = []
     for i in range(len(nodes)-1):
@@ -109,5 +104,6 @@ def clustering(count=20):
 
 
 if __name__ == '__main__':
-    # state_graph()
+    # state_graph(count=20, timestep=5, movestep=1)
     clustering()
+    # generate_wordburst()

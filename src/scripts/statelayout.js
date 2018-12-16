@@ -16,7 +16,7 @@ export default class Statelayout {
       width = document.getElementById('stateview').offsetWidth-margin.right-margin.left,
       height = document.getElementById('stateview').offsetHeight-margin.top-margin.bottom,
       graphHeight = height * 0.8,
-      hullDates = {},
+      dateHull = {},
       kl = new Keywordlayout()
     // ============================ init stateview ============================
     // graph + legend
@@ -31,16 +31,30 @@ export default class Statelayout {
     const yScale = d3.scaleLinear()
       .range([graphHeight, 0])
       .domain(d3.extent(this.nodes, d => d.y))
+    const xScalePCA = d3.scaleBand()
+      .range([0, width])
+      .domain(this.nodes.map(d => d.date))
+    const yScalePCA = d3.scaleLinear()
+      .range([graphHeight, 0])
+      .domain(d3.extent(this.nodes, d => d.pca))
     // reset x, y coordinates
     this.nodes.forEach(d => {
       d.x = xScale(d.x)
       d.y = yScale(d.y)
+      // pca
+      d.px = xScalePCA(d.date)
+      d.py = yScalePCA(d.pca)
     })
-    this.links.forEach(d => {
+    this.links.forEach((d, i) => {
       d.src.x = xScale(d.src.x)
       d.src.y = yScale(d.src.y)
       d.dst.x = xScale(d.dst.x)
       d.dst.y = yScale(d.dst.y)
+      // pca
+      d.src.px = this.nodes[i].px
+      d.src.py = this.nodes[i].py
+      d.dst.px = this.nodes[i+1].px
+      d.dst.py = this.nodes[i+1].py
     })
     const svg = d3.select(document.getElementById('stateview')).append('svg')
       .attr('id', 'stateview-svg')
@@ -48,44 +62,54 @@ export default class Statelayout {
       .attr('height', height+margin.top+margin.bottom)
     const g = svg.append('g')
       .attr('id', 'stateview-g')
+      .attr('width', width)
+      .attr('height', height)
       .attr('transform', `translate(${margin.left}, ${margin.top})`)
     // brush
     const brush = d3.brush()
       .on('end', brushended)
     // hulls
     const hullColor = ['#99B898', '#FECEAB', '#FF847C', '#E84A5F']
-    const temp = {}
+    const temp = {},
+      temp1 = {},
+      temp2 = {}
     for(const node of this.nodes) {
       const group = node.g,
         x = node.x,
-        y = node.y
-      if(group in temp) {
-        temp[group].push([x, y])
+        y = node.y,
+        px = node.px,
+        py = node.py,
+        state = node.state
+      temp[group] = state
+      if(group in temp1) {
+        temp1[group].push([x, y])
+        temp2[group].push([px, py])
       }
       else {
-        temp[group] = [[x, y]]
+        temp1[group] = [[x, y]]
+        temp2[group] = [[px, py]]
       }
-      // init hullDates
-      if(group in hullDates) {
-        hullDates[group].push(node.date)
-      }
-      else {
-        hullDates[group]= [node.date]
+      // init dateHull
+      dateHull[node.date] = {
+        group: node.g,
+        state: node.state
       }
     }
     const hull = []  // [{group: nodes}]
     for(const key in temp) {
       hull.push({
         group: key,
-        nodes: temp[key]
+        state: temp[key],
+        nodes: temp1[key],
+        pnodes: temp2[key]
       })
     }
     g.append('g').selectAll('.hull').data(hull)
       .enter().append('path')
       .attr('class', 'stateview-hull')
       .attr('d', d => `M ${d.nodes.join('L')}Z`)
-      .style('stroke', d => hullColor[+d.group%4])
-      .style('fill', d => hullColor[+d.group%4])
+      .style('stroke', d => hullColor[+d.state])
+      .style('fill', d => hullColor[+d.state])
       .style('stroke-width', '20px')
       .style('stroke-linejoin', 'round')
       .style('opacity', 0)
@@ -136,12 +160,13 @@ export default class Statelayout {
       .style('text-anchor', 'start')
       .text(this.nodes[0].date)
     timeLegendG.append('text')
-      .attr('y', graphHeight+legendMargin.top+legendHeight*2)
+      .attr('class', 'stateview-text')
       .attr('x', legendWidth)
       .attr('y', graphHeight+legendMargin.top+legendHeight*2)
       .style('font-size', '0.5em')
       .style('text-anchor', 'end')
       .text(this.nodes[this.nodes.length-1].date)
+      // .text('2011-12-31')
     function brushended() {
       if(d3.event.selection) {
         const data = []
@@ -159,10 +184,31 @@ export default class Statelayout {
           }
         })
         if(data.length != 0) {
-          // do something
-          kl.initScene(data, hullDates)
+          kl.initScene(data, dateHull)
         }
       }
+    }
+  }
+  switchDimension(opt) {
+    if(opt) {  // one dimension
+      d3.selectAll('.stateview-link')
+        .attr('d', d => `M${d.src.px},${d.src.py}
+                         L${d.dst.px},${d.dst.py}`)
+      d3.selectAll('.stateview-node')
+        .attr('cx', d => d.px)
+        .attr('cy', d => d.py)
+      d3.selectAll('.stateview-hull')
+        .attr('d', d => `M ${d.pnodes.join('L')}Z`)
+    }
+    else {  // two dimension
+      d3.selectAll('.stateview-link')
+        .attr('d', d => `M${d.src.x},${d.src.y}
+                         L${d.dst.x},${d.dst.y}`)
+      d3.selectAll('.stateview-node')
+        .attr('cx', d => d.x)
+        .attr('cy', d => d.y)
+      d3.selectAll('.stateview-hull')
+        .attr('d', d => `M ${d.nodes.join('L')}Z`)
     }
   }
   switchShowGroups(opt) {

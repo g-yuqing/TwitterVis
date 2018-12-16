@@ -161,6 +161,26 @@ def generate_graph(roots, kwlist):
     return graph
 
 
+def wordburst_graph(roots, date):
+    def dfs(trnode):
+        if not trnode.child:
+            return {'name': trnode.word, 'value': 1}
+        else:
+            children = []
+            for child in trnode.child:
+                children.append(dfs(child))
+            return {'name': trnode.word, 'children': children}
+    # children = [dfs(root)]
+    # result = {'name': date, 'children': children}
+
+    # reschildren = []
+    # for root in roots:
+    #     reschildren.append(dfs(root))
+    # result = {'name': date, 'children': reschildren}
+    result = dfs(roots[0])
+    return result
+
+
 def extract_sentences(corpus, kwlist, thres=100):
     class TreeNode():
         def __init__(self, word, value):
