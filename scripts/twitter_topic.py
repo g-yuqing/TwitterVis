@@ -349,10 +349,10 @@ def extract_sentences(corpus, kwlist, thres=100):
         if count >= thres:
             return
         else:
-            # leaves infomartion
+            # leaves information
             leafwords = list(leaves.keys())
             leafcorpus = list(leaves.values())
-            # find the lagerest corpus
+            # find the largest corpus
             lengths = list(map(lambda d: len(d), leafcorpus))
             idx = lengths.index(max(lengths))
             # determine the popword according the length
@@ -362,7 +362,7 @@ def extract_sentences(corpus, kwlist, thres=100):
             if mfword is None or len(popcorpus) == 0:
                 return
             mflist, eptylist = seperate_corpus(mfword, popcorpus)
-            # set result: leaves may contains abc & abcd
+            # set result: leaves may contain abc & abcd
             # result only contains abcd
             if popword in result:
                 result.remove(popword)

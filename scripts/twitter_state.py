@@ -10,7 +10,7 @@ from twitter_keyword import create_period_keyword_whole
 def state_graph(count=20, timestep=5, movestep=1):
     # calculate keywords
     period_kwscore, keyword_score =\
-        create_period_keyword_whole(count, timestep, movestep, False)
+        create_period_keyword_whole(count, timestep, movestep, True)
     print([d[0] for d in keyword_score])
     # vectorize
     allkeywords = list(map(lambda d: d[0], keyword_score))
@@ -104,6 +104,5 @@ def clustering(count=20):
 
 
 if __name__ == '__main__':
-    # state_graph(count=20, timestep=5, movestep=1)
+    state_graph(count=20, timestep=5, movestep=1)
     clustering()
-    # generate_wordburst()

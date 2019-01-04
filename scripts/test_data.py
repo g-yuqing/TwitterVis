@@ -1,10 +1,10 @@
 import json
 import collections
-from itertools import combinations
+# from itertools import combinations
 import random
 import csv
 import numpy as np
-import networkx as nx
+# import networkx as nx
 from gensim.summarization import keywords
 
 
@@ -115,7 +115,7 @@ def extract_keywords():
         # kw_weight += collections.Counter(term_score)
         with open(filepath+'/keywords.json', 'w') as f:
             json.dump(term_score, f)
-        d = sorted(term_score.items(), key=lambda kv: kv[1])[-20:]
+        # d = sorted(term_score.items(), key=lambda kv: kv[1])[-20:]
         # for i in d[::-1]:
         #     print(i[0])
         # test textrank
