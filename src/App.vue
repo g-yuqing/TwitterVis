@@ -1,13 +1,14 @@
 <template>
   <div id="app">
-    <!-- state view -->
     <stateview></stateview>
-    <!-- keyword view -->
-    <keywordview></keywordview>
+    <globalkeywordview></globalkeywordview>
+    <!-- <keywordview></keywordview> -->
     <!-- topic view -->
     <div id="topicview"></div>
     <!-- <div id="wordburst"></div> -->
     <div id="tweetview"></div>
+    <!-- stream view -->
+    <streamview></streamview>
   </div>
 </template>
 
@@ -15,14 +16,18 @@
 import * as d3 from 'd3'
 import * as dat from 'dat.gui'
 import StateView from './components/StateView'
-import KeywordView from './components/KeywordView'
+import StreamView from './components/StreamView'
+import GlobalkeywordView from './components/GlobalkeywordView'
+// import KeywordView from './components/KeywordView'
 
 
 export default {
   name: 'App',
   components: {
     stateview: StateView,
-    keywordview: KeywordView,
+    streamview: StreamView,
+    globalkeywordview: GlobalkeywordView,
+    // keywordview: KeywordView,
   },
   data: () => ({
     // control panel
@@ -37,18 +42,18 @@ export default {
         // state
         // state - init gui dat
         const guiData = {
-          TopicNumbers: 20,
-          TimeSpan: 5,
-          Submit: false,
+          // TopicNumbers: 20,
+          // TimeSpan: 5,
+          // Submit: false,
           '2011': '',
           ShowGroups: false,
           ChangeDimension: false,
         }
         this.gui.domElement.id = 'state-gui'
-        const stateParam = this.gui.addFolder('parameters')
-        stateParam.add(guiData, 'TopicNumbers', 1, 80, 1)
-        stateParam.add(guiData, 'TimeSpan', 1, 14, 1)
-        stateParam.add(guiData, 'Submit')
+        // const stateParam = this.gui.addFolder('parameters')
+        // stateParam.add(guiData, 'TopicNumbers', 1, 80, 1)
+        // stateParam.add(guiData, 'TimeSpan', 1, 14, 1)
+        // stateParam.add(guiData, 'Submit')
         const dateSelector = this.gui.addFolder('dataset')
         dateSelector.add(guiData, '2011', {
           '2011': '0-291',
@@ -65,6 +70,8 @@ export default {
             nodes: this.stateData.nodes.slice(start, end+1),
             links: this.stateData.links.slice(start, end)}
           this.eventHub.$emit('initStateView', stateData, this.keywordData)
+          this.eventHub.$emit('initStreamView', stateData, this.keywordData)
+          this.eventHub.$emit('initGlobalKeywordView', stateData, this.keywordData)
         })
         this.gui.add(guiData, 'ShowGroups').onChange(val => {
           this.eventHub.$emit('switchStateShowGroups', val)
@@ -85,12 +92,9 @@ export default {
       const keywordData = await res.json()
       const res1 = await fetch('../static/state_graph.json')
       const stateData = await res1.json()
-      // const res2 = await fetch('../static/topic_graph.json')
-      // const topicData = await res2.json()
       return {
         keyword: keywordData,
-        state: stateData,
-        // topic: topicData
+        state: stateData
       }
     },
     // layout methods
@@ -107,21 +111,6 @@ export default {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   color: #2c3e50;
-}
-#stateview {
-  position: relative;
-  float: left;
-  width: 30%;
-  height: 600px;
-}
-/* #keyword-tendency {
-  position: relative;
-  float:left;
-  width: 170px;
-  height: 600px;
-  overflow: auto;
-} */
-#keywordview {
 }
 #topicview {
   position: relative;

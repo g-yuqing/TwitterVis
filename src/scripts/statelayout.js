@@ -17,7 +17,7 @@ export default class Statelayout {
       height = document.getElementById('stateview').offsetHeight-margin.top-margin.bottom,
       graphHeight = height * 0.8,
       dateHull = {},
-      kl = new Keywordlayout()
+      lkl = new Keywordlayout()
     // ============================ init stateview ============================
     // graph + legend
     const colorScale = d3.scaleSequential(d3.interpolateYlOrRd)
@@ -177,6 +177,7 @@ export default class Statelayout {
           y1 = s[1][1]
         d3.selectAll('.stateview-node').each(d => {
           if(d.x>=x0 && d.x<=x1 && d.y>=y0 && d.y<=y1) {
+            console.log(d.date);
             data.push({
               date: d.date,
               kwscore: keywordData.period[d.date]
@@ -184,7 +185,7 @@ export default class Statelayout {
           }
         })
         if(data.length != 0) {
-          kl.initScene(data, dateHull)
+          lkl.initScene(data, dateHull)
         }
       }
     }
