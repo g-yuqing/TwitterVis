@@ -1,23 +1,23 @@
 import * as d3 from 'd3'
 import _ from 'lodash'
-import Keywordlayout from './keywordlayout'
+import Localkeyword from './localkeyword'
 
 
 export default class Statelayout {
   constructor() {
   }
-  initScene(stateData, keywordData) {
+  initScene(stateData, keywordData, newsData) {
     // stateData: {nodes: [{}, {}], links: []}
     // keywordData: [{date: date, kwscore: []}, {}, {}]
     document.getElementById('stateview').innerHTML = ''
     this.nodes = _.cloneDeep(stateData.nodes)
     this.links = _.cloneDeep(stateData.links)
-    const margin = {top: 70, right: 50, bottom: 10, left:50},
+    const margin = {top: 70, right: 20, bottom: 10, left:20},
       width = document.getElementById('stateview').offsetWidth-margin.right-margin.left,
       height = document.getElementById('stateview').offsetHeight-margin.top-margin.bottom,
       graphHeight = height * 0.8,
       dateHull = {},
-      lkl = new Keywordlayout()
+      lkl = new Localkeyword()
     // ============================ init stateview ============================
     // graph + legend
     const colorScale = d3.scaleSequential(d3.interpolateYlOrRd)
@@ -68,6 +68,7 @@ export default class Statelayout {
     // brush
     const brush = d3.brush()
       .on('end', brushended)
+      .extent([[-20, -20], [width+20, graphHeight+20]])
     // hulls
     const hullColor = ['#99B898', '#FECEAB', '#FF847C', '#E84A5F']
     const temp = {},
@@ -168,6 +169,7 @@ export default class Statelayout {
       .text(this.nodes[this.nodes.length-1].date)
       // .text('2011-12-31')
     function brushended() {
+      const dateArray = []
       if(d3.event.selection) {
         const data = []
         const s = d3.event.selection,
@@ -177,7 +179,7 @@ export default class Statelayout {
           y1 = s[1][1]
         d3.selectAll('.stateview-node').each(d => {
           if(d.x>=x0 && d.x<=x1 && d.y>=y0 && d.y<=y1) {
-            console.log(d.date);
+            dateArray.push(d.date)
             data.push({
               date: d.date,
               kwscore: keywordData.period[d.date]
@@ -185,7 +187,15 @@ export default class Statelayout {
           }
         })
         if(data.length != 0) {
-          lkl.initScene(data, dateHull)
+          // update stream graph view
+          d3.selectAll('.streamview-time-hint').each(function(d) {
+            d3.select(this).style('visibility', 'hidden')
+            if(dateArray.includes(d)) {
+              d3.select(this).style('visibility', 'visible')
+            }
+          })
+          // update local keyword view
+          lkl.initScene(data, newsData, dateHull)
         }
       }
     }

@@ -140,15 +140,15 @@ def generate_graph(roots, kwlist):
         # vertical
         for i in range(outlen-1):
             onode1, onode2 = outnodes[i], outnodes[i+1]
-            # constraints.append(dict(axis='x', left=onode1.nid,
-            #                         right=onode2.nid, gap=0, equality='true'))
+            constraints.append(dict(axis='x', left=onode1.nid,
+                                    right=onode2.nid, gap=0, equality='true'))
             constraints.append(dict(axis='y', left=onode1.nid,
                                     right=onode2.nid, gap=10))
         # horizontal
         if outlen > 0:
-            # constraints.append(dict(axis='y', left=node.nid,
-            #                         right=outnodes[int(outlen/2)].nid,
-            #                         gap=0, equality='true'))
+            constraints.append(dict(axis='y', left=node.nid,
+                                    right=outnodes[int(outlen/2)].nid,
+                                    gap=0, equality='true'))
             # constraints.append(dict(axis='x', left=node.nid,
             #                         right=outnodes[int(outlen/2)].nid, gap=25))
             length = list(map(lambda d: len(d.word), outnodes))
@@ -412,7 +412,12 @@ def generate_database(timestep=5, movestep=1):
         tid_info = json.load(f)
     date_word_text = collections.defaultdict(list)
     for tid, info in tid_info.items():
-        words = info['words']
+        # words = info['words']
+        # remove one character word
+        words = []
+        for word in info['words']:
+            if len(word) > 1:
+                words.append(word)
         count = info['count']
         content = info['text']
         while content[:2] == 'RT':

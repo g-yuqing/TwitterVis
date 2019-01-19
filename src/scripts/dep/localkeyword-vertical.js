@@ -47,18 +47,21 @@ export default class LocalKeyword {
     })
     // render
     // ----------------------- lines -----------------------
-    const margin = {top: 60, right: 10, bottom: 10, left:50},
-      colWidth = 60,
-      width = datelist.length*colWidth,
-      height = document.getElementById('local-keyword').offsetHeight-margin.top-margin.bottom
+    const margin = {top: 30, right: 10, bottom: 10, left:20},
+      rowHeight = 80,
+      height = datelist.length*rowHeight,
+      width = document.getElementById('local-keyword').offsetWidth-margin.left-margin.right,
+      lineWidth = width * 0.4,
+      titleWidth = width * 0.1,
+      newsWidth = width * 0.5
     const svg = d3.select(document.getElementById('local-keyword')).append('svg')
       .attr('id', 'local-keyword-svg')
       .attr('width', width+margin.left+margin.right)
       .attr('height', height+margin.top+margin.bottom)
     const g = svg.append('g')
-      .attr('id', 'local-keyword-g')
+      .attr('id', 'local-keyword-line-g')
       .attr('transform', `translate(${margin.left}, ${margin.top})`)
-      .attr('width', width)
+      .attr('width', lineWidth)
       .attr('height', height)
     // draw tooltip
     const tooltip = d3.select('body').append('div')
@@ -66,30 +69,30 @@ export default class LocalKeyword {
       .attr('class', 'local-keyword-tooltip')
       .style('visibility', 'hidden')
     // x, y axis
-    const xScale = d3.scaleBand()
+    const yScale = d3.scaleBand()
       .domain(datelist)
-      .range([0, width])
+      .range([0, height])
       .paddingInner(0.03)
-    const yScales = {}
+    const xScales = {}
     for(const date of datelist) {
-      const yScale = d3.scaleLinear()
+      const xScale = d3.scaleLinear()
         .domain(d3.extent(dateScore[date]))
-        .range([height, 0])
-      yScales[date] = yScale
+        .range([lineWidth, 0])
+      xScales[date] = xScale
     }
-    for(const [word, coords] of Object.entries(topWordCoords)) {  // coords: [date, idx]
+    for(const [word, coords] of Object.entries(topWordCoords)) {  // coords: [date, score]
       let color = '#FECEAB',  // leap color
         tempLinks = []
       const wordlinks = []
       const worddates = coords.map(d => d[0])
       for(const date of datelist) {
         const i = worddates.indexOf(date)
-        const yScale = yScales[date]
+        const xScale = xScales[date]
         if(i != -1) {
           // set nodes & links
           const  coord = coords[i],
-            x = xScale(coord[0]),
-            y = yScale(coord[1]),
+            x = xScale(coord[1]),  // score
+            y = yScale(coord[0]),  // date
             ranking = coord[2]
           nodes.push({x: x, y: y, word: word, color: color, ranking: ranking})
           color = '#99B898'
@@ -114,6 +117,7 @@ export default class LocalKeyword {
       .x(d => d.x)
       .y(d => d.y)
       .curve(d3.curveLinear)
+      // .curve(d3.curveStepBefore)
     for(const link of links) {
       g.append('g').append('path')
         .datum(link)
@@ -124,20 +128,16 @@ export default class LocalKeyword {
         .attr('d', line)
     }
     // draw nodes
-    const rectWidth = 10,
-      rectHeight = 6
+    const rectWidth = 3,
+      rectHeight = 10
     g.append('g').selectAll('.dot').data(nodes)
       .enter().append('rect')
       .attr('class', 'local-keyword-node')
-      // .text(d => d.word)
-      // .attr('x', d => d.x)
-      // .attr('y', d => d.y)
       .attr('width', rectWidth)
       .attr('height', rectHeight)
       .attr('x', d => d.x-rectWidth/2)
       .attr('y', d => d.y-rectHeight/2)
       .attr('fill', d => d.color)
-      // .style('text-anchor', 'middle')
       .on('mouseover', d => {
         d3.selectAll('.local-keyword-node').each(function(dd) {
           if(dd.word != d.word) {
@@ -185,12 +185,13 @@ export default class LocalKeyword {
     // ----------------------- title -----------------------
     const titleG = svg.append('g')
       .attr('id', 'local-keyword-title-g')
-      .attr('transform', `translate(${margin.left}, ${margin.top/3})`)
-      .attr('width', width)
-      .attr('height', margin.top)
+      .attr('transform', `translate(${margin.left+lineWidth}, ${margin.top})`)
+      .attr('width', titleWidth)
+      .attr('height', height)
     let prevGroup = 0,
       prevColor = '#A8A7A7',
-      diffColor = '#363636'
+      diffColor = '#363636',
+      bandwidth = yScale.bandwidth()
     const titleData = datelist.map(d => {
       const curGroup = dateHull[d].group
       let curColor = diffColor
@@ -203,33 +204,42 @@ export default class LocalKeyword {
         prevColor = curColor
       }
       return {
-        x: xScale(d),
-        y: 0,
-        text: d,
-        color: curColor
+        x: titleWidth/2,
+        y: yScale(d),
+        date: d,
+        color: curColor,
+        bandwidth: bandwidth
       }
     })
     titleG.append('g').selectAll('.title').data(titleData)
       .enter().append('text')
       .attr('class', 'local-keyword-text')
-      .text(d => d.text)
+      .text(d => d.date)
       .attr('x', d => d.x)
-      .attr('y', d => d.y)
+      .attr('y', d => d.y+1)
       .attr('fill', d => d.color)
+      .style('font-weight', 'bold')
       .style('text-anchor', 'middle')
       .style('font-size', '10px')
     // draw background
     const background = titleG.append('g')
-      .attr('transform', `translate(${-xScale.bandwidth()/2}, 3)`)
+      .attr('transform', `translate(${titleWidth-3}, ${-yScale.bandwidth()/2})`)
     const hullColor = ['#99B898', '#FECEAB', '#FF847C', '#E84A5F']
-    background.selectAll('.background').data(datelist)
+    background.selectAll('.background').data(titleData)
       .enter().append('rect')
       .attr('class', 'local-keyword-background')
-      .attr('x', d => xScale(d))
-      .attr('width', xScale.bandwidth())
-      .attr('height', 3)
-      .attr('fill', d => hullColor[dateHull[d].state])
+      .attr('y', d => yScale(d.date))
+      .attr('width', 3)
+      .attr('height', d => d.bandwidth)
+      .attr('fill', d => hullColor[dateHull[d.date].state])
       .attr('fill-opacity', 1)
+    // ----------------------- news -----------------------
+    const newsG = svg.append('g')
+      .attr('id', 'local-keyword-title-g')
+      .attr('transform', `translate(${margin.left+lineWidth+titleWidth}, ${margin.top})`)
+      .attr('width', newsWidth)
+      .attr('height', height)
+
   }
   switchShowGroups(opt) {
     opt ?

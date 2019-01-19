@@ -2,13 +2,14 @@
   <div id="app">
     <stateview></stateview>
     <globalkeywordview></globalkeywordview>
-    <!-- <keywordview></keywordview> -->
-    <!-- topic view -->
-    <div id="topicview"></div>
-    <!-- <div id="wordburst"></div> -->
-    <div id="tweetview"></div>
-    <!-- stream view -->
     <streamview></streamview>
+    <localkeywordview></localkeywordview>
+    <div id="topicview"></div>
+    <div id="tweetview"></div>
+    <!-- <div id="topicview"></div>
+    <div id="tweetview"></div> -->
+    <!-- <div id="wordburst"></div> -->
+
   </div>
 </template>
 
@@ -18,7 +19,7 @@ import * as dat from 'dat.gui'
 import StateView from './components/StateView'
 import StreamView from './components/StreamView'
 import GlobalkeywordView from './components/GlobalkeywordView'
-// import KeywordView from './components/KeywordView'
+import LocalkeywordView from './components/LocalkeywordView'
 
 
 export default {
@@ -27,6 +28,7 @@ export default {
     stateview: StateView,
     streamview: StreamView,
     globalkeywordview: GlobalkeywordView,
+    localkeywordview: LocalkeywordView
     // keywordview: KeywordView,
   },
   data: () => ({
@@ -38,7 +40,7 @@ export default {
       .then(dataset => {
         this.keywordData = dataset.keyword  // {period: {date: [[kw, score],]}, keywords:[[kw: score], []]}
         this.stateData = dataset.state  // {nodes:[], links: []}
-        // this.topicData = dataset.topic  // {date1: [{tid, text,count, tpc}, {}],}
+        this.newsData = dataset.news  // {date: [{title, content}, {title, content}]}
         // state
         // state - init gui dat
         const guiData = {
@@ -69,8 +71,8 @@ export default {
           const stateData = {
             nodes: this.stateData.nodes.slice(start, end+1),
             links: this.stateData.links.slice(start, end)}
-          this.eventHub.$emit('initStateView', stateData, this.keywordData)
-          this.eventHub.$emit('initStreamView', stateData, this.keywordData)
+          this.eventHub.$emit('initStateView', stateData, this.keywordData, this.newsData)
+          this.eventHub.$emit('initStreamView', stateData, this.keywordData, this.newsData)
           this.eventHub.$emit('initGlobalKeywordView', stateData, this.keywordData)
         })
         this.gui.add(guiData, 'ShowGroups').onChange(val => {
@@ -92,9 +94,12 @@ export default {
       const keywordData = await res.json()
       const res1 = await fetch('../static/state_graph.json')
       const stateData = await res1.json()
+      const res2 = await fetch('../static/news_database.json')
+      const newsData = await res2.json()
       return {
         keyword: keywordData,
-        state: stateData
+        state: stateData,
+        news: newsData,
       }
     },
     // layout methods
@@ -112,28 +117,28 @@ export default {
   -moz-osx-font-smoothing: grayscale;
   color: #2c3e50;
 }
-#topicview {
-  position: relative;
-  float: left;
-  width: 40%;
-  height: 250px;
-}
 #state-gui {
   position: absolute;
   top: 2px;
   left: 2px;
 }
+#topicview {
+  position: relative;
+  float: left;
+  width: 50%;
+  height: 250px;
+}
 #tweetview {
   position: relative;
   float: left;
-  width: 900;
+  width: 50%;
   height: 300px;
   overflow: auto;
 }
-#wordburst {
+/* #wordburst {
   position: relative;
   float: left;
   width: 900px;
   height: 900px;
-}
+} */
 </style>

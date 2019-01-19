@@ -24,8 +24,8 @@ export default {
   float:left;
   -webkit-filter: drop-shadow( 0px 3px 3px rgba(0,0,0,.3) );
   filter: drop-shadow( 0px 3px 3px rgba(0,0,0,.25) );
-  width: 350px;
-  height: 550px;
+  width: 60%;
+  height: 220px;
   overflow: auto;
 }
 .global-keyword-text {

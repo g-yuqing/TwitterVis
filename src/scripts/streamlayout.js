@@ -6,7 +6,7 @@ import * as allToRgb from 'rgb'
 export default class Streamlayout {
   constructor() {
   }
-  initScene(stateData, keywordData) {
+  initScene(stateData, keywordData, newsData) {
     document.getElementById('streamview').innerHTML = ''
     // init data
     const dateKwsList = []
@@ -59,7 +59,7 @@ export default class Streamlayout {
     }
     // ===========================================================
     // stack graph
-    const layerNum = 20,
+    const layerNum = sortKwScore.length,
       sampleNum = datelist.length,
       stack = d3.stack().keys(d3.range(layerNum).map(d => `layer${d}`)).offset(d3.stackOffsetWiggle)
     const keywords = sortKwScore.slice(0, layerNum)
@@ -74,10 +74,9 @@ export default class Streamlayout {
     }
     const layers = stack(matrix)
     // render
-    const margin = {top: 10, bottom: 10, left: 10, right: 50},
-      // width = 500,
-      width = window.innerWidth*0.6,
-      streamHeight = 250,
+    const margin = {top: 20, bottom: 10, left: 10, right: 10},
+      width = window.innerWidth*0.6-margin.left-margin.right,
+      streamHeight = 220,
       axisHeight = 80,
       height = streamHeight+axisHeight
     const xScale = d3.scaleLinear()
@@ -89,8 +88,6 @@ export default class Streamlayout {
         d3.min(layers, function(layer) { return d3.min(layer, d => d[0]) }),
         d3.max(layers, function(layer) { return d3.max(layer, d => d[1]) })
       ])
-    // const colorScale = d3.scaleSequential(d3.interpolateYlOrRd)
-    //   .domain([layerNum, 0])
     const area = d3.area()
       .x(d => xScale(d.data.x))
       .y0(d => yScale(d[0]))
@@ -118,16 +115,6 @@ export default class Streamlayout {
           .attr('stop-color', color)
       }
     }
-    // const linearGradient = svg.append('defs')
-    //   .append('linearGradient')
-    //   .attr('id', 'linear-gradient')
-    // const colorScale = d3.scaleSequential(d3.interpolateYlOrRd)
-    //   .domain([0, datelist.length-1])
-    // for(const i in datelist) {
-    //   linearGradient.append('stop')
-    //     .attr('offset', `${100*i/datelist.length}%`)
-    //     .attr('stop-color', colorScale(i))
-    // }
     const g = svg.append('g')
       .attr('id', 'streamview-g')
       .attr('transform', `translate(${margin.left}, ${margin.top})`)
@@ -152,8 +139,26 @@ export default class Streamlayout {
       .attr('id', 'streamview-timeaxis')
       .attr('transform', `translate(0, ${streamHeight})`)
       .call(d3.axisBottom(timeScale))
+    // highlight label
+    const hintHeight = 4,
+      hintWidth = timeScale(timeData[1])-timeScale(timeData[0])
+    g.append('g')
+      .attr('id', 'streamview-time-hint-g')
+      .attr('transform', `translate(0, ${streamHeight+hintHeight/2})`)
+      .selectAll('.hint')
+      .data(datelist)
+      .enter().append('rect')
+      .attr('class', 'streamview-time-hint')
+      .attr('x', d => timeScale(parseTime(d)))
+      .attr('y', hintHeight/2)
+      .attr('width', hintWidth)
+      .attr('height', hintHeight)
+      .style('fill', '#E84A5F')
+      .style('visibility', 'hidden')
     // mouse event
+    let clicked = false
     const tooltip = d3.select('body').append('div')
+      .attr('id', 'streamview-tooltip')
       .attr('class', 'streamview-tooltip')
       .style('visibility', 'hidden')
       .style('top', `${document.getElementById('streamview').offsetTop}px`)
@@ -161,38 +166,65 @@ export default class Streamlayout {
     g.selectAll('.stream-layer')
       .attr('opacity', 1)
       .on('mouseover', (d, i) => {
-        g.selectAll('.stream-layer').transition()
-          .duration(250)
-          .attr('opacity', (d, ii) => ii!=i?0.3:1)
+        if(!clicked) {
+          g.selectAll('.stream-layer').transition()
+            .duration(250)
+            .attr('opacity', (d, ii) => ii!=i?0.3:1)
+        }
       })
       .on('mousemove', function(d, i) {
-        const mousex = d3.mouse(this)[0],
-          invertx = parseInt(xScale.invert(mousex)),
-          date = timeScale.invert(mousex),
-          kwsObj = matrix[invertx]
-        let htmlContent = `<div class='date'>${parseDate(date)}</div>`
-        for(const key in kwsObj) {
-          if(key == 'x') {continue}
-          const layer = +key.slice(5),  // remove 'layer'
-            score = kwsObj[key]
-          if(layer == i) {
-            htmlContent += `<div class='selected'>${keywords[layer][0]}: ${score}</div>`
+        if(!clicked) {
+          const mousex = d3.mouse(this)[0],
+            invertx = parseInt(xScale.invert(mousex)),
+            date = timeScale.invert(mousex),
+            kwsObj = matrix[invertx]
+          const layer = `layer${i}`,
+            score = kwsObj[layer],
+            keyword = keywords[i][0]
+          let tempSum = 0
+          for(const key in kwsObj) {
+            if(key=='x') {continue}
+            tempSum += kwsObj[key]
           }
-          else {
-            htmlContent += `<div>${keywords[layer][0]}: ${score}</div>`
+          let newsList = []
+          let htmlContent = `<div class='date'>${parseDate(date)}</div><div class='selected'>${keywords[i][0]}: ${(score/tempSum*100).toFixed(2)}%</div>`
+          const idx = datelist.indexOf(parseDate(date))
+          for(let ii=0;ii<5;ii++) {
+            const news = newsData[datelist[idx+ii]]
+            if(news !== undefined) {
+              newsList = newsList.concat(news)
+            }
           }
+          for(const news of newsList) {
+            const title = news.title,
+              content = news.content
+            if(title.includes(keyword)) {
+              htmlContent += `<div class='date'>${title}</div>`
+              htmlContent += `<div class='selected'>${content}</div>`
+            }
+          }
+          tooltip
+            .style('left', `${mousex-document.getElementById('streamview').offsetLeft<=200?mousex+40+document.getElementById('streamview').offsetLeft:mousex-200+document.getElementById('streamview').offsetLeft}px`)
+            .html(htmlContent)
+            .style('visibility', 'visible')
         }
-        tooltip
-          .style('left', `${mousex<=200?mousex+40:mousex-200}px`)
-          .html(htmlContent)
-          .style('visibility', 'visible')
       })
       .on('mouseout', () => {
-        g.selectAll('.stream-layer').transition()
-          .duration(250)
-          .attr('opacity', 1)
-        tooltip.style('visibility', 'hidden')
+        if(!clicked) {
+          g.selectAll('.stream-layer').transition()
+            .duration(250)
+            .attr('opacity', 1)
+          tooltip.style('visibility', 'hidden')
+        }
       })
+    d3.select('#streamview-svg').on('click', function() {
+      if(this==d3.event.target) {  // click empty area
+        clicked = false
+      }
+      else {
+        clicked = true
+      }
+    })
   }
   update() {
   }

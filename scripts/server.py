@@ -36,7 +36,7 @@ class TopicResource(Resource):
                 d['words'] for d in corpuslist if keyword in d['words']]
             corlist += [d for d in corpuslist if keyword in d['words']]
             kwlist += [d[0] for d in kwscorelist]
-        _, roots = extract_sentences(wordslist, kwlist, thres=50)
+        _, roots = extract_sentences(wordslist, kwlist, thres=20)
         graph = generate_graph(roots, kwlist)  # forcelayout
         # graph = wordburst_graph(roots, keyword)  # sunburst
         return [graph, corlist]

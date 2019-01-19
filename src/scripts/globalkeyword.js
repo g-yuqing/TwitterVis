@@ -55,19 +55,21 @@ export default class GlobalKeyword {
       }
     }
     // render
-    const padding = {top: 20, bottom: 5, left: 50},
-      width = 300,
+    const margin = {top: 40, bottom: 5, left: 50, right: 20},
+      // width = 300,
+      width = window.innerWidth*0.6-margin.left-margin.right,
       subHeight = 30,
-      cellHeight = subHeight + padding.bottom,
-      height = sortKwScore.length*(padding.bottom+subHeight),
+      cellHeight = subHeight + margin.bottom,
+      height = sortKwScore.length*(margin.bottom+subHeight),
       keywords = sortKwScore.map(d => d[0])
     const svg = d3.select(document.getElementById('global-keyword')).append('svg')
       .attr('id', 'global-keyword-svg')
-      .attr('width', width+padding.left)
-      .attr('height', height+padding.top+padding.bottom)
+      // .attr('width', width+margin.left)
+      .attr('width', width+margin.left+margin.right)
+      .attr('height', height+margin.top+margin.bottom)
     const g = svg.append('g')
       .attr('id', 'global-keyword-g')
-      .attr('transform', `translate(0, ${padding.top})`)
+      .attr('transform', `translate(${margin.left}, ${margin.top})`)
       .attr('width', width)
       .attr('height', height)
     const colorScale = d3.scaleLinear()
@@ -76,7 +78,7 @@ export default class GlobalKeyword {
       .interpolate(d3.interpolateLab)
     const xScale = d3.scalePoint()
       .domain(datelist)
-      .range([padding.left, width])
+      .range([0, width])
     // draw lines
     for(const i in keywords) {
       const kw = keywords[i],
@@ -96,7 +98,7 @@ export default class GlobalKeyword {
       cellG.append('text')
         .attr('class', 'global-keyword-text')
         .text(kw)
-        .attr('x', padding.left)
+        .attr('x', 0)
         .attr('y', yScale(data[0].score))
         .attr('text-anchor', 'end')
         .attr('fill', color)
@@ -111,9 +113,9 @@ export default class GlobalKeyword {
     // mouse line
     const mouseG = g.append('g')
       .attr('class', 'global-keyword-mouse-g')
-      .attr('transform', `translate(${padding.left}, 0)`)
+      // .attr('transform', `translate(0, 0)`)
     mouseG.append('rect')
-      .attr('width', width-padding.left)
+      .attr('width', width)
       .attr('height', height)
       .attr('fill', 'none')
       .attr('pointer-events', 'all')
@@ -134,7 +136,7 @@ export default class GlobalKeyword {
         // invert of x0
         const domain = xScale.domain(),
           range = xScale.range(),
-          rangePoints = d3.range(range[0]-padding.left, range[1], xScale.step()),
+          rangePoints = d3.range(range[0], range[1], xScale.step()),
           x1 = domain[d3.bisect(rangePoints, x0) -1]
         d3.select('#global-keyword-mousetag')
           .text(x1)

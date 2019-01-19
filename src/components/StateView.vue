@@ -13,7 +13,7 @@ export default {
     }
   },
   mounted() {
-    this.eventHub.$on('initStateView', (stateData, keywordData) => this.sl.initScene(stateData, keywordData))
+    this.eventHub.$on('initStateView', (stateData, keywordData, newsData) => this.sl.initScene(stateData, keywordData, newsData))
     this.eventHub.$on('switchStateDimension', opt => this.sl.switchDimension(opt))
     this.eventHub.$on('switchStateShowGroups', opt => this.sl.switchShowGroups(opt))
   }
@@ -26,8 +26,8 @@ export default {
   float: left;
   -webkit-filter: drop-shadow( 0px 3px 3px rgba(0,0,0,.3) );
   filter: drop-shadow( 0px 3px 3px rgba(0,0,0,.25) );
-  width: 500px;
-  height: 600px;
+  width: 450px;
+  height: 540px;
 }
 .stateview-text {
   font-family: "Times New Roman", Times, serif;

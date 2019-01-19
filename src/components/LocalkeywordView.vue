@@ -23,11 +23,13 @@ export default {
 #local-keyword {
   position: relative;
   float: left;
+  /* float: right; */
   -webkit-filter: drop-shadow( 0px 3px 3px rgba(0,0,0,.3) );
   filter: drop-shadow( 0px 3px 3px rgba(0,0,0,.25) );
-  width: 1150px;
-  height: 600px;
-  overflow: auto;
+  width: 100%;
+  height: 380px;
+  /* overflow: auto; */
+  overflow-x: auto;
 }
 .local-keyword-text {
   font-family: "Times New Roman", Times, serif;
@@ -38,5 +40,16 @@ export default {
   font-family: "Times New Roman", Times, serif;
   font-weight: bold;
   font-size: 7px;
+}
+.local-keyword-tooltip {
+  background-color: hsla(0,0%,100%,0.7);
+  padding: 10px;
+  border-radius: 5px;
+  font-weight: bold;
+  font-size: 10px;
+	width: 80px;
+  height: 7px;
+  position: absolute;
+  z-index: 20;
 }
 </style>

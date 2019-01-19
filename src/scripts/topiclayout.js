@@ -23,12 +23,13 @@ export default class Topiclayout {
       width = document.getElementById('topicview').offsetWidth-margin.left-margin.right,
       height = (document.getElementById('topicview').offsetHeight-margin.top-margin.bottom)
     const fontScale = d3.scaleLinear()
-      .range([10,20])
+      .range([7, 15])
       .domain(d3.extent(graph.nodes, d => d.tf))
     const xScale = d3.scaleLinear()
-      .range([0, width])
+      // .range([0, width-20])
+      .range([width-20, 0])
     const yScale = d3.scaleLinear()
-      .range([height, 0])
+      .range([height-20, 0])
     // empty previous visualization
     document.getElementById('topicview').innerHTML = ''
     // visualize
@@ -79,7 +80,7 @@ export default class Topiclayout {
       .attr('class', 'topic-label')
       .text(d => d.word)
       .attr('fill', d => d.color)
-      .style('font-size', d => `${fontScale(d.tf)}px`)
+      .style('font-size', d => `${fontScale(d.tf/2)}px`)
       .call(d3cola.drag)
       .on('click', function(d) {
         // empty
@@ -140,32 +141,32 @@ export default class Topiclayout {
         .attr('y', d => yScale(d.y+d.height/4))
     })
   }
-  createBarChart(data, svg, offset) {
-    // data: [{date: count}, {}]
-    const width = 100,
-      height = 10,
-      datelist = data.datelist
-    const xScale = d3.scaleBand()
-      .domain(datelist[0], datelist[datelist.length-1])
-      .range([0, width])
-      .paddingInner(0.01)
-    const xAxis = d3.axisBottom()
-      .scale(xScale)
-    const yScale = d3.scaleLinear()
-      .domain(d3.extent(data, d=>d.rtc))
-      .range([height, 0])
-    const chartG = svg.append('g')
-      .attr('transform', `translate(0, ${offset})`)
-    chartG.append('g')
-      .attr('class', 'rt-chart-axis')
-      .call(xAxis)
-    chartG.selectAll('.rt-chart-bar')
-      .data(data)
-      .enter().append('rect')
-      .attr('class', 'rt-chart-bar')
-      .attr('x', d => xScale(d.date))
-      .attr('width', xScale.bandwidth())
-      .attr('y', d => yScale(d.count))
-      .attr('height', d => height - yScale(d.count))
-  }
+  // createBarChart(data, svg, offset) {
+  //   // data: [{date: count}, {}]
+  //   const width = 100,
+  //     height = 10,
+  //     datelist = data.datelist
+  //   const xScale = d3.scaleBand()
+  //     .domain(datelist[0], datelist[datelist.length-1])
+  //     .range([0, width])
+  //     .paddingInner(0.01)
+  //   const xAxis = d3.axisBottom()
+  //     .scale(xScale)
+  //   const yScale = d3.scaleLinear()
+  //     .domain(d3.extent(data, d=>d.rtc))
+  //     .range([height, 0])
+  //   const chartG = svg.append('g')
+  //     .attr('transform', `translate(0, ${offset})`)
+  //   chartG.append('g')
+  //     .attr('class', 'rt-chart-axis')
+  //     .call(xAxis)
+  //   chartG.selectAll('.rt-chart-bar')
+  //     .data(data)
+  //     .enter().append('rect')
+  //     .attr('class', 'rt-chart-bar')
+  //     .attr('x', d => xScale(d.date))
+  //     .attr('width', xScale.bandwidth())
+  //     .attr('y', d => yScale(d.count))
+  //     .attr('height', d => height - yScale(d.count))
+  // }
 }
