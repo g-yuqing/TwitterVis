@@ -4,6 +4,7 @@
     <globalkeywordview></globalkeywordview>
     <streamview></streamview>
     <localkeywordview></localkeywordview>
+    <div id="newsview"></div>
     <div id="topicview"></div>
     <div id="tweetview"></div>
     <!-- <div id="topicview"></div>
@@ -122,16 +123,27 @@ export default {
   top: 2px;
   left: 2px;
 }
+#newsview {
+  position: relative;
+  float: left;
+  width: 45%;
+  height: 500px;
+  overflow: auto;
+  background-color: hsla(0,0%,100%,0.7);
+  padding: 10px;
+  border-radius: 5px;
+  font-size: 7px;
+}
 #topicview {
   position: relative;
   float: left;
-  width: 50%;
-  height: 250px;
+  width: 45%;
+  height: 200px;
 }
 #tweetview {
   position: relative;
   float: left;
-  width: 50%;
+  width: 45%;
   height: 300px;
   overflow: auto;
 }
@@ -141,4 +153,24 @@ export default {
   width: 900px;
   height: 900px;
 } */
+.newsview .title {
+  font-weight: 900;
+  font-size: 12px;
+  margin-bottom: 2px;
+}
+.newsview .content {
+  font-weight: 900;
+  font-size: 9px;
+  color: #E8175D;
+}
+.tweetview .count {
+  font-weight: 900;
+  font-size: 12px;
+  margin-bottom: 2px;
+  color: #E8175D;
+}
+.tweetview .tweet {
+  font-weight: 900;
+  font-size: 9px;
+}
 </style>

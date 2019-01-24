@@ -136,6 +136,9 @@ export default class Statelayout {
       .attr('cx', d => d.x)
       .attr('cy', d => d.y)
       .style('fill', (d, i) => colorScale(i))
+      .attr('stroke', '#4682b4')
+      .attr('stroke-width', 1)
+      .style('stroke-opacity', 0)
     // legend
     const legendMargin = {top: 20},
       legendWidth = 300,
@@ -177,8 +180,10 @@ export default class Statelayout {
           y0 = s[0][1],
           x1 = s[1][0],
           y1 = s[1][1]
-        d3.selectAll('.stateview-node').each(d => {
+        d3.selectAll('.stateview-node').each(function(d) {
+          d3.select(this).style('stroke-opacity', 0)
           if(d.x>=x0 && d.x<=x1 && d.y>=y0 && d.y<=y1) {
+            d3.select(this).style('stroke-opacity', 1)
             dateArray.push(d.date)
             data.push({
               date: d.date,

@@ -153,7 +153,7 @@ export default class Streamlayout {
       .attr('y', hintHeight/2)
       .attr('width', hintWidth)
       .attr('height', hintHeight)
-      .style('fill', '#E84A5F')
+      .style('fill', '#4682b4')
       .style('visibility', 'hidden')
     // mouse event
     let clicked = false
@@ -207,6 +207,26 @@ export default class Streamlayout {
             .style('left', `${mousex-document.getElementById('streamview').offsetLeft<=200?mousex+40+document.getElementById('streamview').offsetLeft:mousex-200+document.getElementById('streamview').offsetLeft}px`)
             .html(htmlContent)
             .style('visibility', 'visible')
+          // interact with stateview
+          d3.selectAll('.stateview-link').attr('opacity', 0.1)
+          d3.selectAll('.stateview-node').each(function(d) {
+            d3.select(this).attr('opacity', 1)
+            if(d.date != parseDate(date)) {
+              d3.select(this).attr('opacity', 0.1)
+            }
+          })
+          // interact with global keyword view
+          d3.selectAll('.global-keyword-link').each(function() {
+            const linkId = d3.select(this).attr('id')
+            if(linkId == `global-keyword-link-${keywords[i][0]}`) {
+              d3.select(this).attr('stroke-width', '3px')
+                .attr('stroke-opacity', 1)
+            }
+            else {
+              d3.select(this).attr('stroke-width', '1px')
+                .attr('stroke-opacity', 0.3)
+            }
+          })
         }
       })
       .on('mouseout', () => {
@@ -215,6 +235,12 @@ export default class Streamlayout {
             .duration(250)
             .attr('opacity', 1)
           tooltip.style('visibility', 'hidden')
+          // interact with stateview
+          d3.selectAll('.stateview-link').attr('opacity', 1)
+          d3.selectAll('.stateview-node').attr('opacity', 1)
+          // // interact with global keyword view
+          d3.selectAll('.global-keyword-link').attr('stroke-width', '1px')
+          d3.selectAll('.global-keyword-link').attr('stroke-opacity', 1)
         }
       })
     d3.select('#streamview-svg').on('click', function() {

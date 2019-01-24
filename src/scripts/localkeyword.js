@@ -91,7 +91,7 @@ export default class LocalKeyword {
             x = xScale(coord[0]),
             y = yScale(coord[1]),
             ranking = coord[2]
-          nodes.push({x: x, y: y, word: word, color: color, ranking: ranking})
+          nodes.push({x: x, y: y, word: word, color: color, ranking: ranking, date: date})
           color = '#99B898'
           tempLinks.push({x:x, y:y, word: word})
         }
@@ -125,7 +125,10 @@ export default class LocalKeyword {
     }
     // draw nodes
     const rectWidth = 10,
-      rectHeight = 6
+      rectHeight = 6,
+      newsDiv = d3.select(document.getElementById('newsview')).append('div')
+        .attr('id', 'newsview-div')
+        .attr('class', 'newsview')
     g.append('g').selectAll('.dot').data(nodes)
       .enter().append('rect')
       .attr('class', 'local-keyword-node')
@@ -164,7 +167,35 @@ export default class LocalKeyword {
           .style('visibility', 'visible')
       })
       .on('click', d => {
-        // trigger loading
+        // trigger news loading
+        document.getElementById('newsview-div').innerHTML = ''
+        let newsList = []
+        let htmlContent = `<div class='title'>News</div><div class='title'>${d.date}</div><div class='content'>keyword: ${d.word} ranking: ${+d.ranking+1}</div>`
+        const idx = datelist.indexOf(d.date)  // 3 days early, 5 days latter
+        const early = idx>=3?idx-3:0,
+          latter = 5
+        for(let ii=0;ii<early;ii++) {  // early
+          const news = newsData[datelist[idx+ii]]
+          if(news !== undefined) {
+            newsList = newsList.concat(news)
+          }
+        }
+        for(let ii=0;ii<latter;ii++) {  // latter
+          const news = newsData[datelist[idx+ii]]
+          if(news !== undefined) {
+            newsList = newsList.concat(news)
+          }
+        }
+        for(const news of newsList) {
+          const title = news.title,
+            content = news.content
+          if(title.includes(d.word)) {
+            htmlContent += `<div class='title'>${title}</div>`
+            htmlContent += `<div class='content'>${content}</div>`
+          }
+        }
+        newsDiv.html(htmlContent)
+        // trigger tweet loading
         const spinner = new Spinner(loadOpt).spin(document.getElementById('topicview'))
         const params = new URLSearchParams()
         params.set('keyword', d.word)
@@ -188,7 +219,8 @@ export default class LocalKeyword {
       .attr('transform', `translate(${margin.left}, ${margin.top/3})`)
       .attr('width', width)
       .attr('height', margin.top)
-    let prevGroup = 0,
+    // let prevGroup = 0,
+    let prevGroup = dateHull[datelist[0]].group,
       prevColor = '#A8A7A7',
       diffColor = '#363636'
     const titleData = datelist.map(d => {
@@ -205,31 +237,57 @@ export default class LocalKeyword {
       return {
         x: xScale(d),
         y: 0,
-        text: d,
+        date: d,
         color: curColor
       }
     })
     titleG.append('g').selectAll('.title').data(titleData)
       .enter().append('text')
       .attr('class', 'local-keyword-text')
-      .text(d => d.text)
+      .text(d => d.date)
       .attr('x', d => d.x)
       .attr('y', d => d.y)
       .attr('fill', d => d.color)
       .style('text-anchor', 'middle')
       .style('font-size', '10px')
+
     // draw background
+    let bgPrevGroup = dateHull[datelist[0]].group,
+      bgTempData = []
+    const backgroundDateset = []
+    datelist.forEach(d => {
+      const bgCurGroup = dateHull[d].group
+      if(bgPrevGroup == bgCurGroup) {
+        bgTempData.push(d)
+      }
+      else {
+        backgroundDateset.push(bgTempData)
+        bgTempData = [d]
+      }
+      bgPrevGroup = bgCurGroup
+    })
+    backgroundDateset.push(bgTempData)
+    const backgroundData = backgroundDateset.map(d => {
+      return {
+        x: xScale(d[0]),
+        width: xScale(d[d.length-1]) - xScale(d[0]) + xScale.bandwidth(),
+        height: 3,
+        color: '#4682b4'
+      }
+    })
     const background = titleG.append('g')
       .attr('transform', `translate(${-xScale.bandwidth()/2}, 3)`)
-    const hullColor = ['#99B898', '#FECEAB', '#FF847C', '#E84A5F']
-    background.selectAll('.background').data(datelist)
+    // const hullColor = ['#99B898', '#FECEAB', '#FF847C', '#E84A5F']
+    background.selectAll('.background').data(backgroundData)
       .enter().append('rect')
       .attr('class', 'local-keyword-background')
-      .attr('x', d => xScale(d))
-      .attr('width', xScale.bandwidth())
-      .attr('height', 3)
-      .attr('fill', d => hullColor[dateHull[d].state])
+      .attr('x', d => d.x)
+      .attr('width', d => d.width)
+      .attr('height', d => d.height)
+      .attr('fill', d => d.color)
+      // .attr('fill', d => hullColor[dateHull[d].state])
       .attr('fill-opacity', 1)
+
   }
   switchShowGroups(opt) {
     opt ?

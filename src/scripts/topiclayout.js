@@ -1,6 +1,6 @@
 import * as d3 from 'd3'
 import * as cola from 'webcola'
-import Sunburst from 'sunburst-chart'
+// import Sunburst from 'sunburst-chart'
 
 
 export default class Topiclayout {
@@ -19,7 +19,7 @@ export default class Topiclayout {
     //   )
     //   .onNodeClick((d,i) => {console.log(d, i)})(document.getElementById('wordburst'))
 
-    const margin = {top: 20, right: 10, bottom: 50, left:20},
+    const margin = {top: 10, right: 10, bottom: 10, left:20},
       width = document.getElementById('topicview').offsetWidth-margin.left-margin.right,
       height = (document.getElementById('topicview').offsetHeight-margin.top-margin.bottom)
     const fontScale = d3.scaleLinear()
@@ -33,6 +33,9 @@ export default class Topiclayout {
     // empty previous visualization
     document.getElementById('topicview').innerHTML = ''
     // visualize
+    const tweetDiv = d3.select(document.getElementById('tweetview')).append('div')
+      .attr('id', 'tweetview-div')
+      .attr('class', 'tweetview')
     const svg = d3.select(document.getElementById('topicview')).append('svg')
       .attr('id', 'topic-svg')
       .attr('width', width + margin.left + margin.right)
@@ -84,7 +87,7 @@ export default class Topiclayout {
       .call(d3cola.drag)
       .on('click', function(d) {
         // empty
-        document.getElementById('tweetview').innerHTML = ''
+        document.getElementById('tweetview-div').innerHTML = ''
         d3.selectAll('.topic-label').attr('stroke', null)
         // init
         const tempText = []
@@ -98,38 +101,43 @@ export default class Topiclayout {
           }
         })
         tweetData.sort((a, b) => (a.count < b.count) ? 1 : ((b.count < a.count) ? -1 : 0))
-
         d3.select(this).attr('stroke', '#99B898')
-        const tableWidth = (width + margin.left + margin.right)*1.5,
-          tableHeight = tweetData.length * 20
-        const tweetSvg = d3.select(document.getElementById('tweetview')).append('svg')
-          .attr('id', 'tweet-svg')
-          .attr('width', tableWidth)
-          .attr('height', tableHeight)
-        const tweetG = tweetSvg.append('g')
-          .attr('id', 'topic-g')
-          .attr('width', tableWidth)
-          .attr('height', tableHeight)
-          .attr('transform', `translate(${margin.left}, ${margin.top})`)
-        tweetG
-          .selectAll('.tweet')
-          .data(tweetData)
-          .enter()
-          .append('text')
-          .attr('class', 'tweet-text')
-          .text(d => d.count)
-          .attr('x', 0)
-          .attr('y', (d, i) => i*25)
-          .style('font-size', '10px')
-        tweetG
-          .selectAll('.tweet')
-          .data(tweetData)
-          .enter().append('text')
-          .attr('class', 'tweet-text')
-          .text(d => d.text)
-          .attr('x', 30)
-          .attr('y', (d, i) => i*25)
-          .style('font-size', '10px')
+
+        let htmlContent = `<div class='tweet'>Tweet</div><div class='count'>keyword: ${d.word} - ${tweetData.length} tweets</div>`
+        tweetData.forEach(td => {
+          htmlContent += `<div class='count'>・retweet count: ${td.count}</div><div class='tweet'>${td.text}</div>`
+        })
+        tweetDiv.html(htmlContent)
+        // const tableWidth = (width + margin.left + margin.right)*1.5,
+        //   tableHeight = tweetData.length * 20
+        // const tweetSvg = d3.select(document.getElementById('tweetview')).append('svg')
+        //   .attr('id', 'tweet-svg')
+        //   .attr('width', tableWidth)
+        //   .attr('height', tableHeight)
+        // const tweetG = tweetSvg.append('g')
+        //   .attr('id', 'topic-g')
+        //   .attr('width', tableWidth)
+        //   .attr('height', tableHeight)
+        //   .attr('transform', `translate(${margin.left}, ${margin.top})`)
+        // tweetG
+        //   .selectAll('.tweet')
+        //   .data(tweetData)
+        //   .enter()
+        //   .append('text')
+        //   .attr('class', 'tweet-text')
+        //   .text(d => d.count)
+        //   .attr('x', 0)
+        //   .attr('y', (d, i) => i*25)
+        //   .style('font-size', '10px')
+        // tweetG
+        //   .selectAll('.tweet')
+        //   .data(tweetData)
+        //   .enter().append('text')
+        //   .attr('class', 'tweet-text')
+        //   .text(d => d.text)
+        //   .attr('x', 30)
+        //   .attr('y', (d, i) => i*25)
+        //   .style('font-size', '10px')
       })
     d3cola.on('tick', function() {
       xScale.domain(d3.extent(graph.nodes, d => d.x))
