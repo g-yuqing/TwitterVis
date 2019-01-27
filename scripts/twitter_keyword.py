@@ -4,6 +4,28 @@ import numpy as np
 import datetime
 
 
+def unify_word(word):
+    word_dictionary = {
+        '被ばく': '被曝',
+        'セシウムさん': 'セシウム',
+        '放射性セシウム': 'セシウム',
+        '甲状腺': '甲状線',
+        '保物': '保健物理',
+        'がん': '癌',
+        'ガン': '癌',
+        '子ども': '子供',
+        'こども': '子供',
+        '児': '子供',
+        'ふくしま': '福島',
+        'フクシマ': '福島',
+        '東電': '東京電力'
+    }
+    if word in word_dictionary:
+        return word_dictionary[word]
+    else:
+        return word
+
+
 def create_period_keyword_whole(length=20, timestep=5, movestep=1, save=False):
     '''
     consider a period of time one time unit
@@ -12,8 +34,9 @@ def create_period_keyword_whole(length=20, timestep=5, movestep=1, save=False):
     keyword_score: [(keyword, score), ] | all the keywords in descending order
     output {period: {keyword: score}}
     '''
-    bigwords = ['福島', '福島県', '原発', '福島原発', '東電', '放射能', '放射線',
-                '東京電力']
+    # bigwords = ['福島', '福島県', '原発', '福島原発', '東電', '放射能', '放射線',
+    #             '東京電力']
+    bigwords = ['福島', '福島県', '原発', '福島原発']
     date_period = {}  # {date1: [date1, date2, ]}
     start = datetime.date(2011, 3, 11)
     end = datetime.date(2011, 12, 31) - datetime.timedelta(days=timestep-1)
@@ -59,7 +82,8 @@ def create_period_keyword_whole(length=20, timestep=5, movestep=1, save=False):
             retweet_count += count
         # retweet count in one day
         for tid, count in tid_count.items():  # each tweet
-            words = tid_info[tid]['words']
+            # words = tid_info[tid]['words']
+            words = [unify_word(d) for d in tid_info[tid]['words']]
             words_len = len(words)  # word count in one tweet
             # remove repeated element
             nr_words = list(set(words))
@@ -79,7 +103,8 @@ def create_period_keyword_whole(length=20, timestep=5, movestep=1, save=False):
         # remove unrelated terms
         for key, val in term_score.items():
             if len(key) <= 1 or key == 'たち' or key == 'さん' or\
-                    key == 'そう' or key == '今日' or key == '日本':
+                    key == 'そう' or key == '今日' or key == '日本' or\
+                    key == '第一' or key == '現在':
                 term_score[key] = 0.0
             # remove bigwords
             if key in bigwords:

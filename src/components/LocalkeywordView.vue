@@ -13,8 +13,7 @@ export default {
     }
   },
   mounted() {
-    this.eventHub.$on('initKeywordView', data => this.lk.initScene(data))
-    this.eventHub.$on('switchKeywordShowGroups', opt => this.lk.switchShowGroups(opt))
+    this.eventHub.$on('initLocalKeywordView', (keywordData, newsData, dateHull) => this.lk.initScene(keywordData, newsData, dateHull))
   }
 }
 </script>

@@ -138,7 +138,15 @@ export default class Streamlayout {
     g.append('g')
       .attr('id', 'streamview-timeaxis')
       .attr('transform', `translate(0, ${streamHeight})`)
-      .call(d3.axisBottom(timeScale))
+      // .call(d3.axisBottom(timeScale))
+      .call(d3.axisBottom(timeScale)
+        .ticks(20)
+        .tickFormat(d3.timeFormat('%Y-%m-%d')))
+      .selectAll('text')
+      .style('text-anchor', 'end')
+      .attr('dx', '-.8em')
+      .attr('dy', '.15em')
+      .attr('transform', 'rotate(-90)')
     // highlight label
     const hintHeight = 4,
       hintWidth = timeScale(timeData[1])-timeScale(timeData[0])

@@ -2,7 +2,8 @@ import os
 import json
 from flask import Flask
 from flask_restful import Api, Resource
-from twitter_topic import generate_graph, extract_sentences, wordburst_graph
+# from twitter_topic import generate_graph, extract_sentences, wordburst_graph
+from twitter_topic import generate_graph, extract_sentences
 from flask_cors import CORS
 
 

@@ -1,12 +1,12 @@
 import * as d3 from 'd3'
 import _ from 'lodash'
-import Localkeyword from './localkeyword'
+// import Localkeyword from './localkeyword'
 
 
 export default class Statelayout {
   constructor() {
   }
-  initScene(stateData, keywordData, newsData) {
+  initScene(stateData, keywordData) {
     // stateData: {nodes: [{}, {}], links: []}
     // keywordData: [{date: date, kwscore: []}, {}, {}]
     document.getElementById('stateview').innerHTML = ''
@@ -15,9 +15,9 @@ export default class Statelayout {
     const margin = {top: 70, right: 20, bottom: 10, left:20},
       width = document.getElementById('stateview').offsetWidth-margin.right-margin.left,
       height = document.getElementById('stateview').offsetHeight-margin.top-margin.bottom,
-      graphHeight = height * 0.8,
-      dateHull = {},
-      lkl = new Localkeyword()
+      graphHeight = height * 0.8
+      // dateHull = {},
+      // lkl = new Localkeyword()
     // ============================ init stateview ============================
     // graph + legend
     const colorScale = d3.scaleSequential(d3.interpolateYlOrRd)
@@ -90,11 +90,11 @@ export default class Statelayout {
         temp1[group] = [[x, y]]
         temp2[group] = [[px, py]]
       }
-      // init dateHull
-      dateHull[node.date] = {
-        group: node.g,
-        state: node.state
-      }
+      // // init dateHull
+      // dateHull[node.date] = {
+      //   group: node.g,
+      //   state: node.state
+      // }
     }
     const hull = []  // [{group: nodes}]
     for(const key in temp) {
@@ -200,7 +200,7 @@ export default class Statelayout {
             }
           })
           // update local keyword view
-          lkl.initScene(data, newsData, dateHull)
+          // lkl.initScene(data, newsData, dateHull)
         }
       }
     }

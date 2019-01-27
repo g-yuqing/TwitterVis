@@ -1,0 +1,8 @@
+{"period":
+  {
+    "2019-01-01": [["topic0", 1], ["topic1", 1], ["topic2", 1], ["topic3", 12], ["topic4", 12]],
+    "2019-01-02": [["topic0", 1], ["topic1", 1], ["topic2", 1.2], ["topic3", 12], ["topic4", 12]],
+    "2019-01-03": [["topic0", 7], ["topic1", 7], ["topic2", 17], ["topic3", 17], ["topic4", 17]],
+    "2019-01-04": [["topic0", 27], ["topic1", 1], ["topic2", 1], ["topic3", 1], ["topic4", 1]],
+    "2019-01-05": [["topic0", 27.2], ["topic1", 1], ["topic2", 1], ["topic3", 1], ["topic4", 1]]},
+    "keywords": {"topic0": 63.2, "topic1": 11.0, "topic2": 21.2, "topic3": 43.0, "topic4": 43.0}}

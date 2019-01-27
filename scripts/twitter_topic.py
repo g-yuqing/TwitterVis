@@ -407,7 +407,8 @@ def extract_sentences(corpus, kwlist, thres=100):
 
 def generate_database(timestep=5, movestep=1):
     count = 5 * timestep
-    bigwords = ['福島', '福島県', '原発', '福島原発', '東電', '放射能', '放射線']
+    # bigwords = ['福島', '福島県', '原発', '福島原発', '東電', '放射能', '放射線']
+    bigwords = ['福島', '福島県', '原発', '福島原発']
     with open('../data/retweet-2011/sample.json', 'r') as f:
         tid_info = json.load(f)
     date_word_text = collections.defaultdict(list)

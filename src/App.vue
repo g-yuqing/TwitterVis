@@ -75,6 +75,7 @@ export default {
           this.eventHub.$emit('initStateView', stateData, this.keywordData, this.newsData)
           this.eventHub.$emit('initStreamView', stateData, this.keywordData, this.newsData)
           this.eventHub.$emit('initGlobalKeywordView', stateData, this.keywordData)
+          this.eventHub.$emit('initLocalKeywordView', stateData, this.keywordData, this.newsData)
         })
         this.gui.add(guiData, 'ShowGroups').onChange(val => {
           this.eventHub.$emit('switchStateShowGroups', val)

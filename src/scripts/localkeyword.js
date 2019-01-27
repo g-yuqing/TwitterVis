@@ -6,9 +6,35 @@ import Topiclayout from './topiclayout'
 export default class LocalKeyword {
   constructor() {
   }
-  initScene(keywordData, newsData, dateHull) {
+  // initScene(keywordData, newsData, dateHull) {
+  initScene(stateData, keywordDataAll, newsData) {
     // keywordData: [{date: '', kwscore: [['kw', 'score'], ['kw', 'score']]}]
     // dateHull: {date: {group, state}}
+    let minProp = 1,
+      maxProp = 0
+    const keywordData = [],
+      dateHull = {}
+    for(const node of stateData.nodes) {
+      let allScore = 0
+      for(const kwScore of keywordDataAll.period[node.date]) {
+        allScore += kwScore[1]
+      }
+      const kwProp = keywordDataAll.period[node.date].map(d => {
+        const kw = d[0],
+          prop = d[1]/allScore
+        if(prop>maxProp) {maxProp = prop}
+        if(prop<minProp) {minProp = prop}
+        return [kw, prop]
+      })
+      keywordData.push({
+        date: node.date,
+        kwscore: kwProp
+      })
+      dateHull[node.date] = {
+        group: node.g,
+        state: node.state
+      }
+    }
     document.getElementById('local-keyword').innerHTML = ''
     const tl = new Topiclayout(),
       loadOpt = {
@@ -25,7 +51,7 @@ export default class LocalKeyword {
     const nodes = []
     let links = []
     const topWordCoords = {},
-      topCount = 10,
+      topCount = 20,
       dateScore = {}
     keywordData.forEach(dateKwscore => {  // keywordData: [{date: '', kwscore: [['kw', 'score'], ['kw', 'score']]}]
       const date = dateKwscore.date,
@@ -77,6 +103,9 @@ export default class LocalKeyword {
         .range([height, 0])
       yScales[date] = yScale
     }
+    // const yScale = d3.scaleLinear()
+    //   .domain([minProp, maxProp])
+    //   .range([height, 0])
     for(const [word, coords] of Object.entries(topWordCoords)) {  // coords: [date, idx]
       let color = '#FECEAB',  // leap color
         tempLinks = []
@@ -214,6 +243,8 @@ export default class LocalKeyword {
           })
       })
     // ----------------------- title -----------------------
+    const colorScale = d3.scaleSequential(d3.interpolateYlOrRd)
+      .domain([0, datelist.length])
     const titleG = svg.append('g')
       .attr('id', 'local-keyword-title-g')
       .attr('transform', `translate(${margin.left}, ${margin.top/3})`)
@@ -223,7 +254,7 @@ export default class LocalKeyword {
     let prevGroup = dateHull[datelist[0]].group,
       prevColor = '#A8A7A7',
       diffColor = '#363636'
-    const titleData = datelist.map(d => {
+    const titleData = datelist.map((d, i) => {
       const curGroup = dateHull[d].group
       let curColor = diffColor
       if(prevGroup==curGroup) {
@@ -238,7 +269,8 @@ export default class LocalKeyword {
         x: xScale(d),
         y: 0,
         date: d,
-        color: curColor
+        // color: curColor
+        color: colorScale(i)
       }
     })
     titleG.append('g').selectAll('.title').data(titleData)
@@ -247,6 +279,8 @@ export default class LocalKeyword {
       .text(d => d.date)
       .attr('x', d => d.x)
       .attr('y', d => d.y)
+      .style('stroke', '#474747')
+      .style('stroke-width', 0.1)
       .attr('fill', d => d.color)
       .style('text-anchor', 'middle')
       .style('font-size', '10px')
@@ -269,8 +303,8 @@ export default class LocalKeyword {
     backgroundDateset.push(bgTempData)
     const backgroundData = backgroundDateset.map(d => {
       return {
-        x: xScale(d[0]),
-        width: xScale(d[d.length-1]) - xScale(d[0]) + xScale.bandwidth(),
+        x: xScale(d[0])+xScale.bandwidth()*0.3,
+        width: xScale(d[d.length-1]) - xScale(d[0]) + xScale.bandwidth() - xScale.bandwidth()*0.3*2,
         height: 3,
         color: '#4682b4'
       }
