@@ -250,41 +250,25 @@ export default class LocalKeyword {
       .attr('transform', `translate(${margin.left}, ${margin.top/3})`)
       .attr('width', width)
       .attr('height', margin.top)
-    // let prevGroup = 0,
-    let prevGroup = dateHull[datelist[0]].group,
-      prevColor = '#A8A7A7',
-      diffColor = '#363636'
     const titleData = datelist.map((d, i) => {
-      const curGroup = dateHull[d].group
-      let curColor = diffColor
-      if(prevGroup==curGroup) {
-        curColor = prevColor
-      }
-      else {
-        prevGroup = curGroup
-        diffColor = prevColor
-        prevColor = curColor
-      }
       return {
         x: xScale(d),
         y: 0,
         date: d,
-        // color: curColor
         color: colorScale(i)
       }
     })
     titleG.append('g').selectAll('.title').data(titleData)
       .enter().append('text')
-      .attr('class', 'local-keyword-text')
+      .attr('class', 'local-keyword-title-text')
+      .attr('id', d => `local-keyword-title-text-${d.date}`)
       .text(d => d.date)
       .attr('x', d => d.x)
       .attr('y', d => d.y)
-      .style('stroke', '#474747')
-      .style('stroke-width', 0.1)
       .attr('fill', d => d.color)
       .style('text-anchor', 'middle')
       .style('font-size', '10px')
-
+      .style('font-weight', 'bold')
     // draw background
     let bgPrevGroup = dateHull[datelist[0]].group,
       bgTempData = []

@@ -32,8 +32,9 @@ def state_graph(count=20, timestep=5, movestep=1):
     graph = np.array(veclist)
     # nodes
     nodes = []
-    tsne = manifold.TSNE(n_components=2, perplexity=5,
-                         early_exaggeration=12, random_state=0)
+    # tsne = manifold.TSNE(n_components=2, perplexity=5,
+    #                      early_exaggeration=12, random_state=0)
+    tsne = manifold.TSNE(n_components=2, perplexity=50)
     tsnepos = tsne.fit_transform(graph)
     for tpos, g, d, r in\
             zip(tsnepos, graph, datelist, ratiolist):

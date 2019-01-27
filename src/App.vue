@@ -37,35 +37,32 @@ export default {
     gui: new dat.GUI({autoPlace: false}),
   }),
   mounted() {
-    this.loadData()
-      .then(dataset => {
-        this.keywordData = dataset.keyword  // {period: {date: [[kw, score],]}, keywords:[[kw: score], []]}
-        this.stateData = dataset.state  // {nodes:[], links: []}
-        this.newsData = dataset.news  // {date: [{title, content}, {title, content}]}
-        // state
-        // state - init gui dat
-        const guiData = {
-          // TopicNumbers: 20,
-          // TimeSpan: 5,
-          // Submit: false,
-          '2011': '',
-          ShowGroups: false,
-          ChangeDimension: false,
-        }
-        this.gui.domElement.id = 'state-gui'
-        // const stateParam = this.gui.addFolder('parameters')
-        // stateParam.add(guiData, 'TopicNumbers', 1, 80, 1)
-        // stateParam.add(guiData, 'TimeSpan', 1, 14, 1)
-        // stateParam.add(guiData, 'Submit')
-        const dateSelector = this.gui.addFolder('dataset')
-        dateSelector.add(guiData, '2011', {
-          '2011': '0-291',
-          'Mar. Apr.': '0-50',
-          'May. Jun.': '51-111',
-          'Jul. Aug.': '112-173',
-          'Sep. Oct.': '174-234',
-          'Nov. Dec.': '235-291',  // to 12/27
-        }).onChange(val => {
+    // state
+    // state - init gui dat
+    const guiData = {
+      'all': '',
+      '東電なし': '',
+      '東電と放射能なし': '',
+      '東電と放射能と汚染なし': '',
+      ShowGroups: false,
+    }
+    this.gui.domElement.id = 'state-gui'
+    const dateSelector = this.gui.addFolder('dataset')
+    // ===========================================
+    dateSelector.add(guiData, 'all', {
+      '2011': '0-291',
+      'Mar. Apr.': '0-50',
+      'May. Jun.': '51-111',
+      'Jul. Aug.': '112-173',
+      'Sep. Oct.': '174-234',
+      'Nov. Dec.': '235-291',  // to 12/27
+    }).onChange(val => {
+      const path = '../static/all/'
+      this.loadData(path)
+        .then(dataset => {
+          this.keywordData = dataset.keyword  // {period: {date: [[kw, score],]}, keywords:[[kw: score], []]}
+          this.stateData = dataset.state  // {nodes:[], links: []}
+          this.newsData = dataset.news  // {date: [{title, content}, {title, content}]}
           const ext = val.split('-'),
             start = +ext[0],
             end = +ext[1]
@@ -77,24 +74,99 @@ export default {
           this.eventHub.$emit('initGlobalKeywordView', stateData, this.keywordData)
           this.eventHub.$emit('initLocalKeywordView', stateData, this.keywordData, this.newsData)
         })
-        this.gui.add(guiData, 'ShowGroups').onChange(val => {
-          this.eventHub.$emit('switchStateShowGroups', val)
-          this.eventHub.$emit('switchKeywordShowGroups', val)
+    })
+    dateSelector.add(guiData, '東電なし', {
+      '2011': '0-291',
+      'Mar. Apr.': '0-50',
+      'May. Jun.': '51-111',
+      'Jul. Aug.': '112-173',
+      'Sep. Oct.': '174-234',
+      'Nov. Dec.': '235-291',  // to 12/27
+    }).onChange(val => {
+      const path = '../static/東電なし/'
+      this.loadData(path)
+        .then(dataset => {
+          this.keywordData = dataset.keyword  // {period: {date: [[kw, score],]}, keywords:[[kw: score], []]}
+          this.stateData = dataset.state  // {nodes:[], links: []}
+          this.newsData = dataset.news  // {date: [{title, content}, {title, content}]}
+          const ext = val.split('-'),
+            start = +ext[0],
+            end = +ext[1]
+          const stateData = {
+            nodes: this.stateData.nodes.slice(start, end+1),
+            links: this.stateData.links.slice(start, end)}
+          this.eventHub.$emit('initStateView', stateData, this.keywordData, this.newsData)
+          this.eventHub.$emit('initStreamView', stateData, this.keywordData, this.newsData)
+          this.eventHub.$emit('initGlobalKeywordView', stateData, this.keywordData)
+          this.eventHub.$emit('initLocalKeywordView', stateData, this.keywordData, this.newsData)
         })
-        this.gui.add(guiData, 'ChangeDimension').onChange(val => {
-          this.eventHub.$emit('switchStateDimension', val)
+    })
+    dateSelector.add(guiData, '東電と放射能なし', {
+      '2011': '0-291',
+      'Mar. Apr.': '0-50',
+      'May. Jun.': '51-111',
+      'Jul. Aug.': '112-173',
+      'Sep. Oct.': '174-234',
+      'Nov. Dec.': '235-291',  // to 12/27
+    }).onChange(val => {
+      const path = '../static/東電と放射能なし/'
+      this.loadData(path)
+        .then(dataset => {
+          this.keywordData = dataset.keyword  // {period: {date: [[kw, score],]}, keywords:[[kw: score], []]}
+          this.stateData = dataset.state  // {nodes:[], links: []}
+          this.newsData = dataset.news  // {date: [{title, content}, {title, content}]}
+          const ext = val.split('-'),
+            start = +ext[0],
+            end = +ext[1]
+          const stateData = {
+            nodes: this.stateData.nodes.slice(start, end+1),
+            links: this.stateData.links.slice(start, end)}
+          this.eventHub.$emit('initStateView', stateData, this.keywordData, this.newsData)
+          this.eventHub.$emit('initStreamView', stateData, this.keywordData, this.newsData)
+          this.eventHub.$emit('initGlobalKeywordView', stateData, this.keywordData)
+          this.eventHub.$emit('initLocalKeywordView', stateData, this.keywordData, this.newsData)
         })
-        // state - graph view
-        document.getElementById('app').appendChild(this.gui.domElement)
-      })
+    })
+    dateSelector.add(guiData, '東電と放射能と汚染なし', {
+      '2011': '0-291',
+      'Mar. Apr.': '0-50',
+      'May. Jun.': '51-111',
+      'Jul. Aug.': '112-173',
+      'Sep. Oct.': '174-234',
+      'Nov. Dec.': '235-291',  // to 12/27
+    }).onChange(val => {
+      const path = '../static/東電と放射能と汚染なし/'
+      this.loadData(path)
+        .then(dataset => {
+          this.keywordData = dataset.keyword  // {period: {date: [[kw, score],]}, keywords:[[kw: score], []]}
+          this.stateData = dataset.state  // {nodes:[], links: []}
+          this.newsData = dataset.news  // {date: [{title, content}, {title, content}]}
+          const ext = val.split('-'),
+            start = +ext[0],
+            end = +ext[1]
+          const stateData = {
+            nodes: this.stateData.nodes.slice(start, end+1),
+            links: this.stateData.links.slice(start, end)}
+          this.eventHub.$emit('initStateView', stateData, this.keywordData, this.newsData)
+          this.eventHub.$emit('initStreamView', stateData, this.keywordData, this.newsData)
+          this.eventHub.$emit('initGlobalKeywordView', stateData, this.keywordData)
+          this.eventHub.$emit('initLocalKeywordView', stateData, this.keywordData, this.newsData)
+        })
+    })
+    // ===========================================
+    this.gui.add(guiData, 'ShowGroups').onChange(val => {
+      this.eventHub.$emit('switchStateShowGroups', val)
+      this.eventHub.$emit('switchKeywordShowGroups', val)
+    })
+    document.getElementById('app').appendChild(this.gui.domElement)
   },
   watch: {
   },
   methods: {
-    async loadData() {
-      const res = await fetch('../static/top_keywords.json')
+    async loadData(path) {
+      const res = await fetch(`${path}top_keywords.json`)
       const keywordData = await res.json()
-      const res1 = await fetch('../static/state_graph.json')
+      const res1 = await fetch(`${path}state_graph.json`)
       const stateData = await res1.json()
       const res2 = await fetch('../static/news_database.json')
       const newsData = await res2.json()

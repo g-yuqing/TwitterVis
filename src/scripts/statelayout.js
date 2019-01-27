@@ -5,6 +5,7 @@ import _ from 'lodash'
 
 export default class Statelayout {
   constructor() {
+    this.stateBrushes = []
   }
   initScene(stateData, keywordData) {
     // stateData: {nodes: [{}, {}], links: []}
@@ -46,6 +47,8 @@ export default class Statelayout {
       d.py = yScalePCA(d.pca)
     })
     this.links.forEach((d, i) => {
+      d.src.date = this.nodes[i].date
+      d.dst.date = this.nodes[i+1].date
       d.src.x = xScale(d.src.x)
       d.src.y = yScale(d.src.y)
       d.dst.x = xScale(d.dst.x)
@@ -115,20 +118,55 @@ export default class Statelayout {
       .style('stroke-linejoin', 'round')
       .style('opacity', 0)
     // links
+    let selectedLinks = ''
     g.append('g').selectAll('.link').data(this.links)
       .enter().append('path')
       .attr('class', 'stateview-link')
       .attr('id', (d, i) => `stateview-link${i}`)
-      .attr('stroke-width', '1.5px')
+      .attr('stroke-width', 1.5)
       .attr('stroke', '#A8A7A7')
       .attr('fill', 'none')
       .attr('d', d => `M${d.src.x},${d.src.y}
                        L${d.dst.x},${d.dst.y}`)
+      .on('mouseover', function() {
+        d3.select(this).attr('stroke-width', 5)
+          .attr('stroke', '#4682b4')
+      })
+      .on('mouseout', function() {
+        d3.selectAll('.stateview-link').each(function() {
+          const dom = d3.select(this)
+          if(selectedLinks != dom.attr('id')) {
+            dom.attr('stroke-width', 1.5)
+              .attr('stroke', '#A8A7A7')
+          }
+        })
+
+      })
+      .on('click', function(d) {
+        selectedLinks = d3.select(this).attr('id')
+        d3.selectAll('.stateview-link').attr('stroke-width', 1.5)
+          .attr('stroke', '#A8A7A7')
+        d3.select(this).attr('stroke-width', 5)
+          .attr('stroke', '#4682b4')
+        // interact with local keyword view
+        d3.selectAll('.local-keyword-title-text').each(function(dd, ii) {
+          d3.select(this).attr('fill', colorScale(ii))
+          const titleId = d3.select(this).attr('id'),
+            srcId = `local-keyword-title-text-${d.src.date}`,
+            dstId = `local-keyword-title-text-${d.dst.date}`
+          if(titleId == srcId || titleId == dstId) {
+            d3.select(this).attr('fill', '#4682b4')
+            d3.select('#local-keyword-svg')
+              .transition().duration(2000).attr('transform', `translate(-${60*(ii-13)}, 0)`)
+          }
+        })
+      })
     // nodes
     const stateNode = g.append('g').selectAll('.dot').data(this.nodes)
       .enter().append('g')
-      .attr('class', 'brush')
-      .call(brush)
+      .attr('class', 'stateview-node-text')
+      // .attr('class', 'state-brush')
+      // .call(brush)
     stateNode.append('circle')
       .attr('class', 'stateview-node')
       .attr('id', (d, i) => `stateview-node${i}`)
@@ -138,7 +176,13 @@ export default class Statelayout {
       .style('fill', (d, i) => colorScale(i))
       .attr('stroke', '#4682b4')
       .attr('stroke-width', 1)
-      .style('stroke-opacity', 0)
+      // .style('stroke-opacity', 0)
+    stateNode.append('text')
+      .attr('dy', '.35em')
+      .attr('x', d => d.x)
+      .attr('y', d => d.y)
+      .attr('fill', '#4682b4')
+      .text(d => d.date)
     // legend
     const legendMargin = {top: 20},
       legendWidth = 300,
@@ -170,7 +214,6 @@ export default class Statelayout {
       .style('font-size', '0.5em')
       .style('text-anchor', 'end')
       .text(this.nodes[this.nodes.length-1].date)
-      // .text('2011-12-31')
     function brushended() {
       const dateArray = []
       if(d3.event.selection) {
@@ -203,6 +246,11 @@ export default class Statelayout {
           // lkl.initScene(data, newsData, dateHull)
         }
       }
+    }
+  }
+  clearBrush(opt) {
+    if(opt) {
+      this.stateBrushes = []
     }
   }
   switchDimension(opt) {

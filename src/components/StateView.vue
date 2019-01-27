@@ -34,4 +34,11 @@ export default {
   font-weight: bold;
   font-size: 10px;
 }
+.stateview-node-text:hover text {
+  display: inline;
+}
+.stateview-node-text text {
+  display: none;
+  font: 10px sans-serif;
+}
 </style>

@@ -123,6 +123,19 @@ export default class GlobalKeyword {
         .attr('stroke', color)
         .attr('fill', 'none')
         .attr('d', line)
+
+      cellG.append('g').selectAll('.rect')
+        .data(data)
+        .enter().append('rect')
+        .attr('class', 'global-keyword-node')
+        .attr('id', d => `global-keyword-node-${kw}-${d.date}`)
+        .attr('x', d => xScale(d.date))
+        .attr('y', 0)
+        .attr('width', 2)
+        .attr('height', colHeight)
+        .style('fill', '#4682b4')
+        .style('fill-opacity', 0)
+
     }
     // // mouse line
     // const mouseG = g.append('g')

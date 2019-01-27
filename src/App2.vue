@@ -40,11 +40,7 @@ export default {
     }
     this.gui.domElement.id = 'state-gui'
     const dataSelector = this.gui.addFolder('testdata')
-    dataSelector.add(guiData, 'task1', {
-      '1': '1', '2': '2', '3': '3', '4': '4', '5': '5',
-      '6': '6', '7': '7', '8': '8', '9': '9', '10': '10',
-    })
-    dataSelector.add(guiData, 'task2', {
+    dataSelector.add(guiData, 'task1', {  // ==========================task1
       '1': '1', '2': '2', '3': '3', '4': '4', '5': '5',
       '6': '6', '7': '7', '8': '8', '9': '9', '10': '10',
     }).onChange(val => {
@@ -59,7 +55,11 @@ export default {
           this.eventHub.$emit('initLocalKeywordView', this.stateData, this.keywordData, this.newsData)
         })
     })
-    dataSelector.add(guiData, 'task3', {
+    dataSelector.add(guiData, 'task2', {  // ==========================task2
+      '1': '1', '2': '2', '3': '3', '4': '4', '5': '5',
+      '6': '6', '7': '7', '8': '8', '9': '9', '10': '10',
+    })
+    dataSelector.add(guiData, 'task3', {  // ==========================task3
       '1': '1', '2': '2', '3': '3', '4': '4', '5': '5',
       '6': '6', '7': '7', '8': '8', '9': '9', '10': '10',
     })

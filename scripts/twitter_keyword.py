@@ -36,7 +36,7 @@ def create_period_keyword_whole(length=20, timestep=5, movestep=1, save=False):
     '''
     # bigwords = ['福島', '福島県', '原発', '福島原発', '東電', '放射能', '放射線',
     #             '東京電力']
-    bigwords = ['福島', '福島県', '原発', '福島原発']
+    bigwords = ['福島', '福島県', '原発', '福島原発', '東京電力', '放射能', '汚染']
     date_period = {}  # {date1: [date1, date2, ]}
     start = datetime.date(2011, 3, 11)
     end = datetime.date(2011, 12, 31) - datetime.timedelta(days=timestep-1)

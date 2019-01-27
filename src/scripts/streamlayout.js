@@ -1,6 +1,6 @@
 import * as d3 from 'd3'
-import * as rgbToHsl from 'rgb-to-hsl'
-import * as allToRgb from 'rgb'
+// import * as rgbToHsl from 'rgb-to-hsl'
+// import * as allToRgb from 'rgb'
 
 
 export default class Streamlayout {
@@ -99,17 +99,39 @@ export default class Streamlayout {
     // linear gradient
     const colorScale = d3.scaleSequential(d3.interpolateYlOrRd)
       .domain([0, datelist.length-1])
+    // for(let i=0; i<layerNum; i++) {
+    //   const linearGradient = svg.append('defs')
+    //     .append('linearGradient')
+    //     .attr('id', `linear-gradient${i}`)
+    //   for(const ii in datelist) {
+    //     const rgb = colorScale(ii),  // str
+    //       temp = rgb.substring(4, rgb.length-1).replace(/ /g, '').split(','),  // array
+    //       hsl = rgbToHsl(temp[0], temp[1], temp[2]),  // array
+    //       saturation = +hsl[1].slice(0, hsl[1].length-1),
+    //       offset = saturation / (layerNum*1.5),
+    //       color = allToRgb(`hsl(${hsl[0]}, ${saturation-offset*i}, ${hsl[2]})`)  // str
+    //     linearGradient.append('stop')
+    //       .attr('offset', `${100*ii/datelist.length}%`)
+    //       .attr('stop-color', color)
+    //   }
+    // }
+
     for(let i=0; i<layerNum; i++) {
       const linearGradient = svg.append('defs')
         .append('linearGradient')
         .attr('id', `linear-gradient${i}`)
+      const keyword = keywords[i][0]
       for(const ii in datelist) {
-        const rgb = colorScale(ii),  // str
-          temp = rgb.substring(4, rgb.length-1).replace(/ /g, '').split(','),  // array
-          hsl = rgbToHsl(temp[0], temp[1], temp[2]),  // array
-          saturation = +hsl[1].slice(0, hsl[1].length-1),
-          offset = saturation / (layerNum*1.5),
-          color = allToRgb(`hsl(${hsl[0]}, ${saturation-offset*i}, ${hsl[2]})`)  // str
+        const date = datelist[ii],
+          newsList = newsData[date],
+          newsLen = newsList.length
+        let newsCount = 0
+        for(const news of newsList) {
+          const title = news.title
+          if(title.includes(keyword)) { newsCount++ }
+        }
+        let color = d3.color(colorScale(ii))
+        color.opacity = newsCount / newsLen + 0.7
         linearGradient.append('stop')
           .attr('offset', `${100*ii/datelist.length}%`)
           .attr('stop-color', color)
@@ -138,15 +160,15 @@ export default class Streamlayout {
     g.append('g')
       .attr('id', 'streamview-timeaxis')
       .attr('transform', `translate(0, ${streamHeight})`)
-      // .call(d3.axisBottom(timeScale))
-      .call(d3.axisBottom(timeScale)
-        .ticks(20)
-        .tickFormat(d3.timeFormat('%Y-%m-%d')))
-      .selectAll('text')
-      .style('text-anchor', 'end')
-      .attr('dx', '-.8em')
-      .attr('dy', '.15em')
-      .attr('transform', 'rotate(-90)')
+      .call(d3.axisBottom(timeScale))
+      // .call(d3.axisBottom(timeScale)
+      //   .ticks(20)
+      //   .tickFormat(d3.timeFormat('%Y-%m-%d')))
+      // .selectAll('text')
+      // .style('text-anchor', 'end')
+      // .attr('dx', '-.8em')
+      // .attr('dy', '.15em')
+      // .attr('transform', 'rotate(-90)')
     // highlight label
     const hintHeight = 4,
       hintWidth = timeScale(timeData[1])-timeScale(timeData[0])
@@ -170,6 +192,18 @@ export default class Streamlayout {
       .attr('class', 'streamview-tooltip')
       .style('visibility', 'hidden')
       .style('top', `${document.getElementById('streamview').offsetTop}px`)
+    // // timeline
+    // g.append('g').selectAll('.rect')
+    //   .data(datelist)
+    //   .enter().append('rect')
+    //   .attr('class', 'streamview-timeline')
+    //   .attr('id', d => `streamview-timeline-${parseTime(d)}`)
+    //   .attr('x', d => timeScale(parseTime(d)))
+    //   .attr('y', 0)
+    //   .attr('width', 2)
+    //   .attr('height', streamHeight)
+    //   .style('fill', '#4682b4')
+    //   .style('fill-opacity', 0)
 
     g.selectAll('.stream-layer')
       .attr('opacity', 1)
@@ -215,6 +249,16 @@ export default class Streamlayout {
             .style('left', `${mousex-document.getElementById('streamview').offsetLeft<=200?mousex+40+document.getElementById('streamview').offsetLeft:mousex-200+document.getElementById('streamview').offsetLeft}px`)
             .html(htmlContent)
             .style('visibility', 'visible')
+          // // timeline
+          // d3.selectAll('.streamview-timeline').each(function() {
+          //   const timelineId = d3.select(this).attr('id')
+          //   if(timelineId == `streamview-timeline-${parseDate(date)}`) {
+          //     d3.select(this).style('fill-opacity', 1)
+          //   }
+          //   else {
+          //     d3.select(this).style('fill-opacity', 0)
+          //   }
+          // })
           // interact with stateview
           d3.selectAll('.stateview-link').attr('opacity', 0.1)
           d3.selectAll('.stateview-node').each(function(d) {
@@ -227,12 +271,23 @@ export default class Streamlayout {
           d3.selectAll('.global-keyword-link').each(function() {
             const linkId = d3.select(this).attr('id')
             if(linkId == `global-keyword-link-${keywords[i][0]}`) {
-              d3.select(this).attr('stroke-width', '3px')
+              d3.select(this)
+                .attr('stroke-width', '2px')
                 .attr('stroke-opacity', 1)
             }
             else {
-              d3.select(this).attr('stroke-width', '1px')
+              d3.select(this)
+                .attr('stroke-width', '1px')
                 .attr('stroke-opacity', 0.3)
+            }
+          })
+          d3.selectAll('.global-keyword-node').each(function() {
+            const nodeId = d3.select(this).attr('id')
+            if(nodeId == `global-keyword-node-${keywords[i][0]}-${parseDate(date)}`) {
+              d3.select(this).style('fill-opacity', 1)
+            }
+            else {
+              d3.select(this).style('fill-opacity', 0)
             }
           })
         }
@@ -243,12 +298,15 @@ export default class Streamlayout {
             .duration(250)
             .attr('opacity', 1)
           tooltip.style('visibility', 'hidden')
+          // // timeline
+          // d3.selectAll('.streamview-timeline').style('fill-opacity', 0)
           // interact with stateview
           d3.selectAll('.stateview-link').attr('opacity', 1)
           d3.selectAll('.stateview-node').attr('opacity', 1)
           // // interact with global keyword view
           d3.selectAll('.global-keyword-link').attr('stroke-width', '1px')
           d3.selectAll('.global-keyword-link').attr('stroke-opacity', 1)
+          d3.selectAll('.global-keyword-node').style('fill-opacity', 0)
         }
       })
     d3.select('#streamview-svg').on('click', function() {
