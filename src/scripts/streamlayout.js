@@ -115,7 +115,6 @@ export default class Streamlayout {
     //       .attr('stop-color', color)
     //   }
     // }
-
     for(let i=0; i<layerNum; i++) {
       const linearGradient = svg.append('defs')
         .append('linearGradient')
@@ -123,18 +122,27 @@ export default class Streamlayout {
       const keyword = keywords[i][0]
       for(const ii in datelist) {
         const date = datelist[ii],
-          newsList = newsData[date],
-          newsLen = newsList.length
-        let newsCount = 0
-        for(const news of newsList) {
-          const title = news.title
-          if(title.includes(keyword)) { newsCount++ }
+          newsList = newsData[date]
+        if(newsList !== undefined) {
+          const newsLen = newsList.length
+          let newsCount = 0
+          for(const news of newsList) {
+            const title = news.title
+            if(title.includes(keyword)) { newsCount++ }
+          }
+          let color = d3.color(colorScale(ii))
+          color.opacity = newsCount / newsLen + 0.7
+          linearGradient.append('stop')
+            .attr('offset', `${100*ii/datelist.length}%`)
+            .attr('stop-color', color)
         }
-        let color = d3.color(colorScale(ii))
-        color.opacity = newsCount / newsLen + 0.7
-        linearGradient.append('stop')
-          .attr('offset', `${100*ii/datelist.length}%`)
-          .attr('stop-color', color)
+        else {
+          let color = d3.color(colorScale(ii))
+          color.opacity = 0.7
+          linearGradient.append('stop')
+            .attr('offset', `${100*ii/datelist.length}%`)
+            .attr('stop-color', color)
+        }
       }
     }
     const g = svg.append('g')
@@ -147,7 +155,8 @@ export default class Streamlayout {
       .enter().append('path')
       .attr('class', 'stream-layer')
       .attr('d', area)
-      .attr('stroke', '#E1F5C4')
+      // .attr('stroke', '#E1F5C4')
+      .attr('stroke', 'steelblue')
       .attr('stroke-width', 0.1)
       .attr('fill', (d, i) => `url(#linear-gradient${i}`)
     // time axis
@@ -170,6 +179,12 @@ export default class Streamlayout {
       // .attr('dy', '.15em')
       // .attr('transform', 'rotate(-90)')
     // highlight label
+    // test2-----------------------------------------------
+    const testDate = ['2019-01-07', '2019-01-20', '2019-02-01', '2019-02-10'],
+      testColor = ['#594F4F', '#547980', '#45ADA8', '#9DE0AD'],
+      testDate1 = ['2019-01-08', '2019-01-21', '2019-02-02', '2019-02-11'],
+      testDate2 = ['2019-01-09', '2019-01-22', '2019-02-03', '2019-02-12'],
+      testDate3 = ['2019-01-10', '2019-01-23', '2019-02-04', '2019-02-13']
     const hintHeight = 4,
       hintWidth = timeScale(timeData[1])-timeScale(timeData[0])
     g.append('g')
@@ -183,8 +198,32 @@ export default class Streamlayout {
       .attr('y', hintHeight/2)
       .attr('width', hintWidth)
       .attr('height', hintHeight)
-      .style('fill', '#4682b4')
-      .style('visibility', 'hidden')
+      // test2-----------------------------------------------
+      // .style('fill', '#4682b4')
+      // .style('visibility', 'hidden')
+      .style('fill', d => {
+        const idx = testDate.indexOf(d),
+          // test3-----------------------------------------------
+          idx1 = testDate1.indexOf(d),
+          idx2 = testDate2.indexOf(d),
+          idx3 = testDate3.indexOf(d)
+        if(idx != -1) {
+          return testColor[idx]
+        }
+        // test3-----------------------------------------------
+        if(idx1 != -1) {
+          return testColor[idx1]
+        }
+        if(idx2 != -1) {
+          return testColor[idx2]
+        }
+        if(idx3 != -1) {
+          return testColor[idx3]
+        }
+        else {
+          return 'none'
+        }
+      })
     // mouse event
     let clicked = false
     const tooltip = d3.select('body').append('div')

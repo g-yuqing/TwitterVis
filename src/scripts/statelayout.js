@@ -118,6 +118,12 @@ export default class Statelayout {
       .style('stroke-linejoin', 'round')
       .style('opacity', 0)
     // links
+    const tooltip = d3.select('body').append('div')
+      .attr('id', 'stateview-tooltip')
+      .attr('class', 'stateview-tooltip')
+      .style('visibility', 'hidden')
+      .style('top', `${document.getElementById('streamview').offsetTop}px`)
+      .style('left', `${document.getElementById('streamview').offsetLeft}px`)
     let selectedLinks = ''
     g.append('g').selectAll('.link').data(this.links)
       .enter().append('path')
@@ -128,9 +134,13 @@ export default class Statelayout {
       .attr('fill', 'none')
       .attr('d', d => `M${d.src.x},${d.src.y}
                        L${d.dst.x},${d.dst.y}`)
-      .on('mouseover', function() {
+      .on('mouseover', function(d) {
         d3.select(this).attr('stroke-width', 5)
           .attr('stroke', '#4682b4')
+        const textStr = `<div class="date">${d.src.date.slice(5)}</div><div class="date">${d.dst.date.slice(5)}</div>`
+        tooltip
+          .html(textStr)
+          .style('visibility', 'visible')
       })
       .on('mouseout', function() {
         d3.selectAll('.stateview-link').each(function() {
@@ -157,11 +167,17 @@ export default class Statelayout {
           if(titleId == srcId || titleId == dstId) {
             d3.select(this).attr('fill', '#4682b4')
             d3.select('#local-keyword-svg')
-              .transition().duration(2000).attr('transform', `translate(-${60*(ii-13)}, 0)`)
+              .transition().duration(2000).attr('transform', `translate(-${60*(ii-13)>=0?60*(ii-13):0}, 0)`)
           }
         })
       })
     // nodes
+    // test2-----------------------------------------------
+    const testDate = ['2019-01-07', '2019-01-20', '2019-02-01', '2019-02-10'],
+      testColor = ['#594F4F', '#547980', '#45ADA8', '#9DE0AD'],
+      testDate1 = ['2019-01-08', '2019-01-21', '2019-02-02', '2019-02-11'],
+      testDate2 = ['2019-01-09', '2019-01-22', '2019-02-03', '2019-02-12'],
+      testDate3 = ['2019-01-10', '2019-01-23', '2019-02-04', '2019-02-13']
     const stateNode = g.append('g').selectAll('.dot').data(this.nodes)
       .enter().append('g')
       .attr('class', 'stateview-node-text')
@@ -173,7 +189,25 @@ export default class Statelayout {
       .attr('r', d => sizeScale(d.ratio))
       .attr('cx', d => d.x)
       .attr('cy', d => d.y)
-      .style('fill', (d, i) => colorScale(i))
+      // .style('fill', (d, i) => colorScale(i))
+      .style('fill', (d, i) => {
+        if(testDate.indexOf(d.date) != -1) {
+          return testColor[testDate.indexOf(d.date)]
+        }
+        // test3-----------------------------------------------
+        else if(testDate1.indexOf(d.date) != -1) {
+          return testColor[testDate1.indexOf(d.date)]
+        }
+        else if(testDate2.indexOf(d.date) != -1) {
+          return testColor[testDate2.indexOf(d.date)]
+        }
+        else if(testDate3.indexOf(d.date) != -1) {
+          return testColor[testDate3.indexOf(d.date)]
+        }
+        else {
+          return colorScale(i)
+        }
+      })
       .attr('stroke', '#4682b4')
       .attr('stroke-width', 1)
       // .style('stroke-opacity', 0)

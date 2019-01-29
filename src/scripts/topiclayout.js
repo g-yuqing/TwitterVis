@@ -7,18 +7,6 @@ export default class Topiclayout {
   constructor() {
   }
   initScene(graph, wordText) {
-    // const colorScale = ['#99B898', '#FECEAB', '#FF847C', '#E84A5F']
-    // document.getElementById('wordburst').innerHTML = ''
-    // const wordburst = Sunburst()
-    // wordburst.data(graph)
-    //   .width(document.getElementById('wordburst').offsetWidth)
-    //   .height(document.getElementById('wordburst').offsetHeight)
-    //   .color(d => {
-    //     const depth = d.__dataNode.depth
-    //     return depth==0?'#E84A5F':colorScale[depth%3]}
-    //   )
-    //   .onNodeClick((d,i) => {console.log(d, i)})(document.getElementById('wordburst'))
-
     const margin = {top: 10, right: 10, bottom: 10, left:20},
       width = document.getElementById('topicview').offsetWidth-margin.left-margin.right,
       height = (document.getElementById('topicview').offsetHeight-margin.top-margin.bottom)

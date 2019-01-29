@@ -196,6 +196,17 @@ export default class LocalKeyword {
           .style('visibility', 'visible')
       })
       .on('click', d => {
+        d3.selectAll('.local-keyword-node').each(function(dd) {
+          if(dd.word != d.word) {
+            d3.select(this).style('opacity', 0.1)
+          }
+        })
+        d3.selectAll('.local-keyword-link').each(function(dd) {
+          const wordlist = dd.map(ddd => ddd.word)
+          if(!(wordlist.includes(d.word))) {
+            d3.select(this).style('stroke-opacity', 0.1)
+          }
+        })
         // trigger news loading
         document.getElementById('newsview-div').innerHTML = ''
         let newsList = []
@@ -243,6 +254,12 @@ export default class LocalKeyword {
           })
       })
     // ----------------------- title -----------------------
+    // test2-----------------------------------------------
+    const testDate = ['2019-01-07', '2019-01-20', '2019-02-01', '2019-02-10'],
+      testColor = ['#594F4F', '#547980', '#45ADA8', '#9DE0AD'],
+      testDate1 = ['2019-01-08', '2019-01-21', '2019-02-02', '2019-02-11'],
+      testDate2 = ['2019-01-09', '2019-01-22', '2019-02-03', '2019-02-12'],
+      testDate3 = ['2019-01-10', '2019-01-23', '2019-02-04', '2019-02-13']
     const colorScale = d3.scaleSequential(d3.interpolateYlOrRd)
       .domain([0, datelist.length])
     const titleG = svg.append('g')
@@ -251,11 +268,22 @@ export default class LocalKeyword {
       .attr('width', width)
       .attr('height', margin.top)
     const titleData = datelist.map((d, i) => {
+      let color = testDate.indexOf(d) != -1 ? testColor[testDate.indexOf(d)] : colorScale(i)
+      //test3-----------------------------------------------
+      if(testDate1.indexOf(d)!=-1) {
+        color = testColor[testDate1.indexOf(d)]
+      }
+      if(testDate2.indexOf(d)!=-1) {
+        color = testColor[testDate2.indexOf(d)]
+      }
+      if(testDate3.indexOf(d)!=-1) {
+        color = testColor[testDate3.indexOf(d)]
+      }
       return {
         x: xScale(d),
         y: 0,
         date: d,
-        color: colorScale(i)
+        color: color
       }
     })
     titleG.append('g').selectAll('.title').data(titleData)

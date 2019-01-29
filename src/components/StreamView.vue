@@ -39,8 +39,10 @@ export default {
   padding: 10px;
   border-radius: 5px;
   font-size: 7px;
-	width: 180px;
-  height: 210px;
+	/* width: 180px; */
+  /* height: 210px; */
+  width: 80px;
+  height: 30px;
   position: absolute;
   z-index: 20;
   overflow: auto;

@@ -1,16 +1,9 @@
 <template>
   <div id="app">
     <stateview></stateview>
-    <globalkeywordview></globalkeywordview>
+    <!-- <globalkeywordview></globalkeywordview> -->
     <streamview></streamview>
     <localkeywordview></localkeywordview>
-    <div id="newsview"></div>
-    <div id="topicview"></div>
-    <div id="tweetview"></div>
-    <!-- <div id="topicview"></div>
-    <div id="tweetview"></div> -->
-    <!-- <div id="wordburst"></div> -->
-
   </div>
 </template>
 
@@ -37,126 +30,76 @@ export default {
     gui: new dat.GUI({autoPlace: false}),
   }),
   mounted() {
-    // state
-    // state - init gui dat
     const guiData = {
-      'all': '',
-      '東電なし': '',
-      '東電と放射能なし': '',
-      '東電と放射能と汚染なし': '',
-      ShowGroups: false,
+      'task1': '',
+      'task2': '',
+      'task3': '',
+      ShowStateView: false,
+      ShowStreamView: false,
+      ShowLocalView: false
     }
     this.gui.domElement.id = 'state-gui'
-    const dateSelector = this.gui.addFolder('dataset')
-    // ===========================================
-    dateSelector.add(guiData, 'all', {
-      '2011': '0-291',
-      'Mar. Apr.': '0-50',
-      'May. Jun.': '51-111',
-      'Jul. Aug.': '112-173',
-      'Sep. Oct.': '174-234',
-      'Nov. Dec.': '235-291',  // to 12/27
+    const dataSelector = this.gui.addFolder('testdata')
+    dataSelector.add(guiData, 'task1', {  // ==========================task1
+      '1': '1', '2': '2', '3': '3', '4': '4', '5': '5',
+      '6': '6', '7': '7', '8': '8', '9': '9', '10': '10',
     }).onChange(val => {
-      const path = '../static/all/'
+      const path = `../static/user-experiment/task1/${+val<=5?'easy':'hard'}/${+val<=5?val:val-5}`
       this.loadData(path)
         .then(dataset => {
           this.keywordData = dataset.keyword  // {period: {date: [[kw, score],]}, keywords:[[kw: score], []]}
           this.stateData = dataset.state  // {nodes:[], links: []}
-          this.newsData = dataset.news  // {date: [{title, content}, {title, content}]}
-          const ext = val.split('-'),
-            start = +ext[0],
-            end = +ext[1]
-          const stateData = {
-            nodes: this.stateData.nodes.slice(start, end+1),
-            links: this.stateData.links.slice(start, end)}
-          this.eventHub.$emit('initStateView', stateData, this.keywordData, this.newsData)
-          this.eventHub.$emit('initStreamView', stateData, this.keywordData, this.newsData)
-          this.eventHub.$emit('initGlobalKeywordView', stateData, this.keywordData)
-          this.eventHub.$emit('initLocalKeywordView', stateData, this.keywordData, this.newsData)
+          this.newsData = {}
+          this.eventHub.$emit('initStateView', this.stateData, this.keywordData, this.newsData)
+          this.eventHub.$emit('initStreamView', this.stateData, this.keywordData, this.newsData)
+          this.eventHub.$emit('initGlobalKeywordView', this.stateData, this.keywordData)
+          this.eventHub.$emit('initLocalKeywordView', this.stateData, this.keywordData, this.newsData)
         })
     })
-    dateSelector.add(guiData, '東電なし', {
-      '2011': '0-291',
-      'Mar. Apr.': '0-50',
-      'May. Jun.': '51-111',
-      'Jul. Aug.': '112-173',
-      'Sep. Oct.': '174-234',
-      'Nov. Dec.': '235-291',  // to 12/27
+    dataSelector.add(guiData, 'task2', {  // ==========================task2
+      '1': '1', '2': '2', '3': '3', '4': '4', '5': '5',
+      '6': '6', '7': '7', '8': '8', '9': '9', '10': '10',
     }).onChange(val => {
-      const path = '../static/東電なし/'
+      const path = `../static/user-experiment/task2/${+val<=5?'easy':'hard'}/${+val<=5?val:val-5}`
       this.loadData(path)
         .then(dataset => {
           this.keywordData = dataset.keyword  // {period: {date: [[kw, score],]}, keywords:[[kw: score], []]}
           this.stateData = dataset.state  // {nodes:[], links: []}
-          this.newsData = dataset.news  // {date: [{title, content}, {title, content}]}
-          const ext = val.split('-'),
-            start = +ext[0],
-            end = +ext[1]
-          const stateData = {
-            nodes: this.stateData.nodes.slice(start, end+1),
-            links: this.stateData.links.slice(start, end)}
-          this.eventHub.$emit('initStateView', stateData, this.keywordData, this.newsData)
-          this.eventHub.$emit('initStreamView', stateData, this.keywordData, this.newsData)
-          this.eventHub.$emit('initGlobalKeywordView', stateData, this.keywordData)
-          this.eventHub.$emit('initLocalKeywordView', stateData, this.keywordData, this.newsData)
+          this.newsData = {}
+          this.eventHub.$emit('initStateView', this.stateData, this.keywordData, this.newsData)
+          this.eventHub.$emit('initStreamView', this.stateData, this.keywordData, this.newsData)
+          this.eventHub.$emit('initGlobalKeywordView', this.stateData, this.keywordData)
+          this.eventHub.$emit('initLocalKeywordView', this.stateData, this.keywordData, this.newsData)
         })
     })
-    dateSelector.add(guiData, '東電と放射能なし', {
-      '2011': '0-291',
-      'Mar. Apr.': '0-50',
-      'May. Jun.': '51-111',
-      'Jul. Aug.': '112-173',
-      'Sep. Oct.': '174-234',
-      'Nov. Dec.': '235-291',  // to 12/27
+    dataSelector.add(guiData, 'task3', {  // ==========================task3
+      '1': '1', '2': '2', '3': '3', '4': '4', '5': '5',
+      '6': '6', '7': '7', '8': '8', '9': '9', '10': '10',
     }).onChange(val => {
-      const path = '../static/東電と放射能なし/'
+      const path = `../static/user-experiment/task2/${+val<=5?'easy':'hard'}/${+val<=5?val:val-5}`
       this.loadData(path)
         .then(dataset => {
           this.keywordData = dataset.keyword  // {period: {date: [[kw, score],]}, keywords:[[kw: score], []]}
           this.stateData = dataset.state  // {nodes:[], links: []}
-          this.newsData = dataset.news  // {date: [{title, content}, {title, content}]}
-          const ext = val.split('-'),
-            start = +ext[0],
-            end = +ext[1]
-          const stateData = {
-            nodes: this.stateData.nodes.slice(start, end+1),
-            links: this.stateData.links.slice(start, end)}
-          this.eventHub.$emit('initStateView', stateData, this.keywordData, this.newsData)
-          this.eventHub.$emit('initStreamView', stateData, this.keywordData, this.newsData)
-          this.eventHub.$emit('initGlobalKeywordView', stateData, this.keywordData)
-          this.eventHub.$emit('initLocalKeywordView', stateData, this.keywordData, this.newsData)
+          this.newsData = {}
+          this.eventHub.$emit('initStateView', this.stateData, this.keywordData, this.newsData)
+          this.eventHub.$emit('initStreamView', this.stateData, this.keywordData, this.newsData)
+          this.eventHub.$emit('initGlobalKeywordView', this.stateData, this.keywordData)
+          this.eventHub.$emit('initLocalKeywordView', this.stateData, this.keywordData, this.newsData)
         })
     })
-    dateSelector.add(guiData, '東電と放射能と汚染なし', {
-      '2011': '0-291',
-      'Mar. Apr.': '0-50',
-      'May. Jun.': '51-111',
-      'Jul. Aug.': '112-173',
-      'Sep. Oct.': '174-234',
-      'Nov. Dec.': '235-291',  // to 12/27
-    }).onChange(val => {
-      const path = '../static/東電と放射能と汚染なし/'
-      this.loadData(path)
-        .then(dataset => {
-          this.keywordData = dataset.keyword  // {period: {date: [[kw, score],]}, keywords:[[kw: score], []]}
-          this.stateData = dataset.state  // {nodes:[], links: []}
-          this.newsData = dataset.news  // {date: [{title, content}, {title, content}]}
-          const ext = val.split('-'),
-            start = +ext[0],
-            end = +ext[1]
-          const stateData = {
-            nodes: this.stateData.nodes.slice(start, end+1),
-            links: this.stateData.links.slice(start, end)}
-          this.eventHub.$emit('initStateView', stateData, this.keywordData, this.newsData)
-          this.eventHub.$emit('initStreamView', stateData, this.keywordData, this.newsData)
-          this.eventHub.$emit('initGlobalKeywordView', stateData, this.keywordData)
-          this.eventHub.$emit('initLocalKeywordView', stateData, this.keywordData, this.newsData)
-        })
+    this.gui.add(guiData, 'ShowStateView').onChange(val => {
+      const dom = document.getElementById('stateview')
+      console.log(val);
+      val ? dom.style.visibility = 'visible' : dom.style.visibility = 'hidden'
     })
-    // ===========================================
-    this.gui.add(guiData, 'ShowGroups').onChange(val => {
-      this.eventHub.$emit('switchStateShowGroups', val)
-      this.eventHub.$emit('switchKeywordShowGroups', val)
+    this.gui.add(guiData, 'ShowStreamView').onChange(val => {
+      const dom = document.getElementById('streamview')
+      val ? dom.style.visibility = 'visible' : dom.style.visibility = 'hidden'
+    })
+    this.gui.add(guiData, 'ShowLocalView').onChange(val => {
+      const dom = document.getElementById('local-keyword')
+      val ? dom.style.visibility = 'visible' : dom.style.visibility = 'hidden'
     })
     document.getElementById('app').appendChild(this.gui.domElement)
   },
@@ -164,22 +107,15 @@ export default {
   },
   methods: {
     async loadData(path) {
-      const res = await fetch(`${path}top_keywords.json`)
+      const res = await fetch(`${path}top-topics.json`)
       const keywordData = await res.json()
-      const res1 = await fetch(`${path}state_graph.json`)
+      const res1 = await fetch(`${path}state-graph.json`)
       const stateData = await res1.json()
-      const res2 = await fetch('../static/news_database.json')
-      const newsData = await res2.json()
       return {
         keyword: keywordData,
-        state: stateData,
-        news: newsData,
+        state: stateData
       }
     },
-    // layout methods
-    drawStateView() {
-      this.eventHub.$emit('initStateView', this.stateData, this.keywordData)
-    }
   }
 }
 </script>
@@ -193,8 +129,20 @@ export default {
 }
 #state-gui {
   position: absolute;
-  top: 2px;
+  top: 3px;
   left: 2px;
+}
+#stateview {
+  visibility: hidden;
+}
+#streamview {
+  visibility: hidden;
+}
+#local-keyword {
+  visibility: hidden;
+}
+#global-keyword {
+  visibility: hidden;
 }
 #newsview {
   position: relative;
@@ -220,12 +168,6 @@ export default {
   height: 300px;
   overflow: auto;
 }
-/* #wordburst {
-  position: relative;
-  float: left;
-  width: 900px;
-  height: 900px;
-} */
 .newsview .title {
   font-weight: 900;
   font-size: 12px;

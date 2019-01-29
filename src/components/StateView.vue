@@ -41,4 +41,26 @@ export default {
   display: none;
   font: 10px sans-serif;
 }
+.stateview-link-text:hover text {
+  display: inline;
+}
+.stateview-link-text text {
+  display: none;
+  font: 10px sans-serif;
+}
+.stateview-tooltip {
+  background-color: hsla(0,0%,100%,0.7);
+  padding: 10px;
+  border-radius: 5px;
+  font-size: 7px;
+  width: 50px;
+  height: 50px;
+  position: absolute;
+  z-index: 20;
+}
+.stateview-tooltip .date {
+  /* font-weight: 900; */
+  font-size: 12px;
+  margin-bottom: 2px;
+}
 </style>

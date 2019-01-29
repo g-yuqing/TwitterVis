@@ -6,29 +6,48 @@ from sklearn import manifold
 import datetime
 
 
-def generate_data_task1_easy(topic_num, time_len):
+def generate_data_task2_easy(topic_num, time_len):
     '''
     10 topics/20 topics
     '''
     topic_scores = collections.defaultdict(list)
     for time in range(time_len):
-        if time <= 14 or time >= 27:  # pattern1
+        if time < 12:  # pattern1
+            # 1
             for tp in range(topic_num):
                 topic = 'topic'+str(tp)
                 # determine pattern
                 if tp < 3:
-                    minVal, maxVal = 15, 17
+                    minVal, maxVal = 10, 12
                     val = random.randint(minVal, maxVal)
                     topic_scores[topic].append(val)
                 elif tp < 6:
-                    minVal, maxVal = 10, 12
+                    minVal, maxVal = 15, 17
                     val = random.randint(minVal, maxVal)
                     topic_scores[topic].append(val)
                 else:
                     minVal, maxVal = 7, 9
                     val = random.randint(minVal, maxVal)
                     topic_scores[topic].append(val)
-        elif time <= 20:  # pattern2
+        elif time < 24:  # pattern2
+            # 4
+            for tp in range(topic_num):
+                topic = 'topic'+str(tp)
+                # determine pattern
+                if tp < 6:
+                    minVal, maxVal = 10, 12
+                    val = random.randint(minVal, maxVal)
+                    topic_scores[topic].append(val)
+                elif tp < 8:
+                    minVal, maxVal = 13, 15
+                    val = random.randint(minVal, maxVal)
+                    topic_scores[topic].append(val)
+                else:
+                    minVal, maxVal = 9, 11
+                    val = random.randint(minVal, maxVal)
+                    topic_scores[topic].append(val)
+        elif time < 36:  # pattern2
+            # 3
             for tp in range(topic_num):
                 topic = 'topic'+str(tp)
                 # determine pattern
@@ -45,25 +64,119 @@ def generate_data_task1_easy(topic_num, time_len):
                     val = random.randint(minVal, maxVal)
                     topic_scores[topic].append(val)
         else:  # pattern2
+            # 2
             for tp in range(topic_num):
                 topic = 'topic'+str(tp)
                 # determine pattern
-                if tp < 6:
-                    minVal, maxVal = 9, 10
+                if tp < 3:
+                    minVal, maxVal = 14, 16
                     val = random.randint(minVal, maxVal)
                     topic_scores[topic].append(val)
-                elif tp < 8:
-                    minVal, maxVal = 14, 16
+                elif tp < 6:
+                    minVal, maxVal = 10, 12
+                    val = random.randint(minVal, maxVal)
+                    topic_scores[topic].append(val)
+                else:
+                    minVal, maxVal = 8, 10
+                    val = random.randint(minVal, maxVal)
+                    topic_scores[topic].append(val)
+    return topic_scores
+
+
+def generate_data_task2_hard(topic_num, time_len):
+    '''
+    10 topics/20 topics
+    '''
+    topic_scores = collections.defaultdict(list)
+    for time in range(time_len):
+        if time < 12:  # pattern1
+            # 1
+            for tp in range(topic_num):
+                topic = 'topic'+str(tp)
+                # determine pattern
+                if tp < 3:
+                    minVal, maxVal = 10, 12
+                    val = random.randint(minVal, maxVal)
+                    topic_scores[topic].append(val)
+                elif tp < 6:
+                    minVal, maxVal = 8, 10
+                    val = random.randint(minVal, maxVal)
+                    topic_scores[topic].append(val)
+                elif tp < 13:
+                    minVal, maxVal = 13, 15
                     val = random.randint(minVal, maxVal)
                     topic_scores[topic].append(val)
                 else:
                     minVal, maxVal = 7, 9
                     val = random.randint(minVal, maxVal)
                     topic_scores[topic].append(val)
+        elif time < 24:  # pattern2
+            # 4
+            for tp in range(topic_num):
+                topic = 'topic'+str(tp)
+                # determine pattern
+                if tp < 3:
+                    minVal, maxVal = 8, 10
+                    val = random.randint(minVal, maxVal)
+                    topic_scores[topic].append(val)
+                elif tp < 7:
+                    minVal, maxVal = 12, 14
+                    val = random.randint(minVal, maxVal)
+                    topic_scores[topic].append(val)
+                elif tp < 14:
+                    minVal, maxVal = 13, 15
+                    val = random.randint(minVal, maxVal)
+                    topic_scores[topic].append(val)
+                else:
+                    minVal, maxVal = 7, 9
+                    val = random.randint(minVal, maxVal)
+                    topic_scores[topic].append(val)
+        elif time < 36:  # pattern2
+            # 3
+            for tp in range(topic_num):
+                topic = 'topic'+str(tp)
+                # determine pattern
+                if tp < 6:
+                    minVal, maxVal = 15, 17
+                    val = random.randint(minVal, maxVal)
+                    topic_scores[topic].append(val)
+                elif tp < 8:
+                    minVal, maxVal = 7, 9
+                    val = random.randint(minVal, maxVal)
+                    topic_scores[topic].append(val)
+                elif tp < 16:
+                    minVal, maxVal = 8, 10
+                    val = random.randint(minVal, maxVal)
+                    topic_scores[topic].append(val)
+                else:
+                    minVal, maxVal = 10, 12
+                    val = random.randint(minVal, maxVal)
+                    topic_scores[topic].append(val)
+        else:  # pattern2
+            # 2
+            for tp in range(topic_num):
+                topic = 'topic'+str(tp)
+                # determine pattern
+                if tp < 5:
+                    minVal, maxVal = 10, 12
+                    val = random.randint(minVal, maxVal)
+                    topic_scores[topic].append(val)
+                elif tp < 12:
+                    minVal, maxVal = 9, 11
+                    val = random.randint(minVal, maxVal)
+                    topic_scores[topic].append(val)
+                elif tp < 17:
+                    minVal, maxVal = 13, 15
+                    val = random.randint(minVal, maxVal)
+                    topic_scores[topic].append(val)
+                else:
+                    minVal, maxVal = 8, 10
+                    val = random.randint(minVal, maxVal)
+                    topic_scores[topic].append(val)
     return topic_scores
 
 
-def generate_data_task2_easy(topic_num, time_len):
+def generate_data_task1_easy(topic_num, time_len):
     '''
     10 topics/20 topics
     '''
@@ -120,7 +233,7 @@ def generate_data_task2_easy(topic_num, time_len):
     return topic_scores
 
 
-def generate_data_task2_hard(topic_num, time_len):
+def generate_data_task1_hard(topic_num, time_len):
     '''
     10 topics/20 topics
     '''
@@ -277,7 +390,7 @@ def generate_data_task3(topic_num, time_len):
     return topic_scores
 
 
-def graph_data_task1(topic_scores):
+def graph_data_task2(topic_scores):
     time_len = len(topic_scores['topic1'])
     date_topic_score = {}
     topic_sums = collections.defaultdict(float)
@@ -290,7 +403,7 @@ def graph_data_task1(topic_scores):
             temp.append((topic, scores[t]))
             topic_sums[topic] += scores[t]
         date_topic_score[datestr] = temp
-    path1 = '../data/retweet-2011/model-data/task1/top-topics.json'
+    path1 = '../data/retweet-2011/model-data/task2/top-topics.json'
     with open(path1, 'w') as f:
         json.dump(dict(period=date_topic_score,
                        keywords=topic_sums), f)
@@ -327,13 +440,13 @@ def graph_data_task1(topic_scores):
         dst = dict(x=dstn['x'], y=dstn['y'])
         links.append(dict(src=src, dst=dst))
     # save to json file
-    path2 = '../data/retweet-2011/model-data/task1/state-graph.json'
+    path2 = '../data/retweet-2011/model-data/task2/state-graph.json'
     with open(path2, 'w') as f:
         json.dump(dict(nodes=nodes, links=links), f)
 
 
 if __name__ == '__main__':
-    topic_num = 10
+    topic_num = 20
     time_len = 50
     # graph_data_task2(generate_data_task2_hard(topic_num, time_len))
-    graph_data_task1(generate_data_task1_easy(topic_num, time_len))
+    graph_data_task2(generate_data_task2_hard(topic_num, time_len))
