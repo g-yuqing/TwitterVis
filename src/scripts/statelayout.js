@@ -118,6 +118,7 @@ export default class Statelayout {
       .style('stroke-linejoin', 'round')
       .style('opacity', 0)
     // links
+    // test====================================
     const tooltip = d3.select('body').append('div')
       .attr('id', 'stateview-tooltip')
       .attr('class', 'stateview-tooltip')
@@ -137,10 +138,10 @@ export default class Statelayout {
       .on('mouseover', function(d) {
         d3.select(this).attr('stroke-width', 5)
           .attr('stroke', '#4682b4')
-        const textStr = `<div class="date">${d.src.date.slice(5)}</div><div class="date">${d.dst.date.slice(5)}</div>`
-        tooltip
-          .html(textStr)
-          .style('visibility', 'visible')
+        // const textStr = `<div class="date">${d.src.date.slice(5)}</div><div class="date">${d.dst.date.slice(5)}</div>`
+        // tooltip
+        //   .html(textStr)
+        //   .style('visibility', 'visible')
       })
       .on('mouseout', function() {
         d3.selectAll('.stateview-link').each(function() {

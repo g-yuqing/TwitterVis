@@ -76,7 +76,8 @@ export default {
       '1': '1', '2': '2', '3': '3', '4': '4', '5': '5',
       '6': '6', '7': '7', '8': '8', '9': '9', '10': '10',
     }).onChange(val => {
-      const path = `../static/user-experiment/task2/${+val<=5?'easy':'hard'}/${+val<=5?val:val-5}`
+      // const path = `../static/user-experiment/task2/${+val<=5?'easy':'hard'}/${+val<=5?val:val-5}`
+      const path = `../static/user-experiment/task3/${val}`
       this.loadData(path)
         .then(dataset => {
           this.keywordData = dataset.keyword  // {period: {date: [[kw, score],]}, keywords:[[kw: score], []]}

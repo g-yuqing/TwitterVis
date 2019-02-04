@@ -41,7 +41,7 @@ export default {
   display: none;
   font: 10px sans-serif;
 }
-.stateview-link-text:hover text {
+/* .stateview-link-text:hover text {
   display: inline;
 }
 .stateview-link-text text {
@@ -59,8 +59,7 @@ export default {
   z-index: 20;
 }
 .stateview-tooltip .date {
-  /* font-weight: 900; */
   font-size: 12px;
   margin-bottom: 2px;
-}
+} */
 </style>

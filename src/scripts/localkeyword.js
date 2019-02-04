@@ -214,8 +214,8 @@ export default class LocalKeyword {
         const idx = datelist.indexOf(d.date)  // 3 days early, 5 days latter
         const early = idx>=3?idx-3:0,
           latter = 5
-        for(let ii=0;ii<early;ii++) {  // early
-          const news = newsData[datelist[idx+ii]]
+        for(let ii=1;ii<early;ii++) {  // early
+          const news = newsData[datelist[idx-ii]]
           if(news !== undefined) {
             newsList = newsList.concat(news)
           }
@@ -268,6 +268,7 @@ export default class LocalKeyword {
       .attr('width', width)
       .attr('height', margin.top)
     const titleData = datelist.map((d, i) => {
+      // let color = colorScale(i)
       let color = testDate.indexOf(d) != -1 ? testColor[testDate.indexOf(d)] : colorScale(i)
       //test3-----------------------------------------------
       if(testDate1.indexOf(d)!=-1) {
